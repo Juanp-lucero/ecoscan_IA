@@ -12,12 +12,56 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  String message = "";
+  bool loading = false;
+
   void login() {
-    // Simulación login
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const MapScreen()),
-    );
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      setState(() {
+        message = "Completa todos los campos";
+      });
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      message = "";
+    });
+
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MapScreen()),
+      );
+    });
+  }
+
+  void register() {
+    if (emailController.text.isEmpty ||
+        passwordController.text.isEmpty) {
+      setState(() {
+        message = "Completa todos los campos";
+      });
+      return;
+    }
+
+    setState(() {
+      loading = true;
+      message = "";
+    });
+
+    Future.delayed(const Duration(seconds: 1), () {
+      setState(() {
+        loading = false;
+        message = "Cuenta creada (simulación)";
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MapScreen()),
+      );
+    });
   }
 
   @override
@@ -43,7 +87,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
 
-                  // 🌱 LOGO / TITULO
                   const Icon(
                     Icons.eco,
                     color: Colors.greenAccent,
@@ -64,15 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 5),
 
                   const Text(
-                    "Detecta contaminación con IA",
-                    style: TextStyle(
-                      color: Colors.white70,
-                    ),
+                    "Impacto ambiental inteligente",
+                    style: TextStyle(color: Colors.white70),
                   ),
 
                   const SizedBox(height: 30),
 
-                  // 📦 CARD LOGIN
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -85,7 +125,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       children: [
 
-                        // EMAIL
                         TextField(
                           controller: emailController,
                           style: const TextStyle(color: Colors.white),
@@ -105,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 15),
 
-                        // PASSWORD
                         TextField(
                           controller: passwordController,
                           obscureText: true,
@@ -126,7 +164,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const SizedBox(height: 20),
 
-                        // BOTÓN LOGIN
+                        if (loading)
+                          const CircularProgressIndicator(),
+
+                        if (message.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Text(
+                              message,
+                              style: const TextStyle(
+                                  color: Colors.greenAccent),
+                            ),
+                          ),
+
+                        const SizedBox(height: 15),
+
+                        // LOGIN
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -134,26 +187,33 @@ class _LoginScreenState extends State<LoginScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.greenAccent,
                               padding: const EdgeInsets.symmetric(vertical: 15),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                             ),
                             child: const Text(
                               "Iniciar Sesión",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: TextStyle(color: Colors.black),
                             ),
                           ),
                         ),
 
                         const SizedBox(height: 10),
 
-                        // TEXTO EXTRA
-                        const Text(
-                          "Protegiendo el planeta 🌍",
-                          style: TextStyle(color: Colors.white54),
+                        // REGISTER
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            onPressed: register,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                  color: Colors.greenAccent),
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            child: const Text(
+                              "Crear Cuenta",
+                              style:
+                                  TextStyle(color: Colors.greenAccent),
+                            ),
+                          ),
                         ),
                       ],
                     ),

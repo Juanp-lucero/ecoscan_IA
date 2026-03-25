@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'screens/map_screen.dart';
-import 'core/theme.dart';
+import 'screens/login_screen.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://cllppwdhdzkmzbynxuuw.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbHBwd2RoZHprbXpieW54dXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjQ3ODIsImV4cCI6MjA4OTk0MDc4Mn0.5zKvg7U_ajZ_SNxogbW6CbEmtJk10PszicwN174ezoM',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsbHBwd2RoZHprbXpieW54dXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNjQ3ODIsImV4cCI6MjA4OTk0MDc4Mn0.5zKvg7U_ajZ_SNxogbW6CbEmtJk10PszicwN174ezoM',
   );
 
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -23,8 +22,22 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'EcoScan AI',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const MapScreen(),
+
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF020617),
+
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF064E3B),
+          elevation: 0,
+        ),
+
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.greenAccent,
+        ),
+      ),
+
+      home: const LoginScreen(),
     );
   }
 }

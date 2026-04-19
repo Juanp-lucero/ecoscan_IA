@@ -1,14 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/reporte_model.dart';
 
-class ReportNotifier extends StateNotifier<List<Reporte>> {
-  ReportNotifier() : super([]);
+class ReportState {
+  final bool loading;
 
-  void addReport(Reporte reporte) {
-    state = [...state, reporte];
+  ReportState({this.loading = false});
+
+  ReportState copyWith({bool? loading}) {
+    return ReportState(
+      loading: loading ?? this.loading,
+    );
+  }
+}
+
+class ReportNotifier extends StateNotifier<ReportState> {
+  ReportNotifier() : super(ReportState());
+
+  void setLoading(bool value) {
+    state = state.copyWith(loading: value);
   }
 }
 
 final reportProvider =
-    StateNotifierProvider<ReportNotifier, List<Reporte>>(
-        (ref) => ReportNotifier());
+    StateNotifierProvider<ReportNotifier, ReportState>((ref) {
+  return ReportNotifier();
+});

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'map_screen.dart';
-import 'dashboard_screen.dart';
+import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'report_screen.dart';
+import 'dashboard_screen.dart';
+import 'map_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,63 +13,66 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int index = 0;
+  int currentIndex = 0;
 
   final screens = [
+    const ReportScreen(),
     const MapScreen(),
     const DashboardScreen(),
   ];
-
-  void _goToReport() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ReportScreen()),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("EcoScan AI 🌱"),
+        centerTitle: true,
+        backgroundColor: Colors.black,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
+            icon: const Icon(Icons.logout, color: Colors.greenAccent),
+            onPressed: () async {
+              await AuthService().signOut();
+
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const LoginScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
               );
             },
           )
         ],
       ),
-      body: screens[index],
 
-      // ✅ BOTÓN FLOTANTE
-      floatingActionButton: FloatingActionButton(
-        onPressed: _goToReport,
-        backgroundColor: const Color(0xFF00E676),
-        child: const Icon(Icons.camera_alt, color: Colors.black),
-      ),
+      body: screens[currentIndex],
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: index,
-        onTap: (value) {
-          setState(() => index = value);
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: "Map",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: "Dashboard",
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Colors.black,
+          boxShadow: [
+            BoxShadow(color: Colors.greenAccent, blurRadius: 10)
+          ],
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: Colors.black,
+          selectedItemColor: Colors.greenAccent,
+          unselectedItemColor: Colors.grey,
+          currentIndex: currentIndex,
+          onTap: (index) => setState(() => currentIndex = index),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.camera_alt),
+              label: "Scan",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.map),
+              label: "Map",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart),
+              label: "Stats",
+            ),
+          ],
+        ),
       ),
     );
   }

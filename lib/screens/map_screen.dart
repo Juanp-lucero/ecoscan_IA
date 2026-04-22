@@ -1,76 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../providers/pollution_provider.dart';
+import 'package:geolocator/geolocator.dart';
 
-class MapScreen extends ConsumerWidget {
+class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pollution = ref.watch(pollutionProvider);
+  State<MapScreen> createState() => _MapScreenState();
+}
 
-    final zone = "zone_1";
-    final notifier = ref.read(pollutionProvider.notifier);
+class _MapScreenState extends State<MapScreen> {
+  LatLng initialPosition = const LatLng(6.2442, -75.5812); // Medellín default
 
-    final level = notifier.getZoneLevel(zone);
-    final isCritical = notifier.isCriticalZone(zone);
+  @override
+  void initState() {
+    super.initState();
+    _getLocation();
+  }
 
-    Color zoneColor;
-    if (level == "high") {
-      zoneColor = Colors.red;
-    } else if (level == "medium") {
-      zoneColor = Colors.orange;
-    } else {
-      zoneColor = Colors.green;
+  Future<void> _getLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
     }
 
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: const CameraPosition(
-            target: LatLng(6.2442, -75.5812),
-            zoom: 14,
-          ),
-        ),
+    if (permission == LocationPermission.deniedForever) return;
 
-        // 🔥 ALERTA
-        if (isCritical)
-          Positioned(
-            top: 50,
-            left: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                "⚠ High risk pollution zone",
-                style: TextStyle(color: Colors.white),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
+    final pos = await Geolocator.getCurrentPosition();
 
-        // 🔥 INDICADOR DE NIVEL
-        Positioned(
-          bottom: 30,
-          left: 20,
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: zoneColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              "Zone Level: $level",
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-        ),
-      ],
+    setState(() {
+      initialPosition = LatLng(pos.latitude, pos.longitude);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(
+        target: initialPosition,
+        zoom: 15,
+      ),
+      myLocationEnabled: true,
+      myLocationButtonEnabled: true,
     );
   }
 }

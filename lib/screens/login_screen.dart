@@ -1,135 +1,143 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
-  void _login(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
-    );
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
+
+  bool isLogin = true;
+  bool isLoading = false;
+
+  final auth = AuthService();
+
+  // 🔐 VALIDACIONES
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Falta ingresar el email";
+    }
+    if (!value.contains("@")) {
+      return "Email inválido";
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return "Falta ingresar la contraseña";
+    }
+    if (value.length < 6) {
+      return "Mínimo 6 caracteres";
+    }
+    return null;
+  }
+
+  Future<void> _submit() async {
+    // 🚨 VALIDAR FORM
+    if (!_formKey.currentState!.validate()) return;
+
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() => isLoading = true);
+
+    try {
+      if (isLogin) {
+        await auth.signIn(email, password);
+      } else {
+        await auth.signUp(email, password);
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (e) {
+      String message = "Error inesperado";
+
+      if (e.toString().contains("Invalid login credentials")) {
+        message = "Correo o contraseña incorrectos";
+      } else if (e.toString().contains("User already registered")) {
+        message = "El usuario ya existe";
+      } else if (e.toString().contains("rate limit")) {
+        message = "Demasiados intentos, espera un momento";
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF0A0F1C),
-              Color(0xFF0F1B2D),
-              Color(0xFF00E676),
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+      body: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Center(
+          child: Form(
+            key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 🌱 Logo
-                const Icon(
-                  Icons.eco,
-                  size: 90,
-                  color: Colors.white,
+                const Text(
+                  "EcoScan AI 🌱",
+                  style: TextStyle(fontSize: 28),
+                ),
+
+                const SizedBox(height: 30),
+
+                // 📧 EMAIL
+                TextFormField(
+                  controller: emailController,
+                  decoration: const InputDecoration(labelText: "Email"),
+                  validator: validateEmail,
+                ),
+
+                const SizedBox(height: 10),
+
+                // 🔐 PASSWORD
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  validator: validatePassword,
                 ),
 
                 const SizedBox(height: 20),
 
-                // Title
-                const Text(
-                  "EcoScan AI",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 1.5,
+                // 🔘 BOTÓN
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : Text(isLogin ? "Login" : "Register"),
                   ),
                 ),
 
                 const SizedBox(height: 10),
 
-                const Text(
-                  "Detect environmental pollution with AI",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 40),
-
-                // Email Field
-                TextField(
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Email",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                // Password Field
-                TextField(
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: "Password",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 25),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _login(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00E676),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                    ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                // Fake register text
-                const Text(
-                  "Don’t have an account? Sign up",
-                  style: TextStyle(color: Colors.white70),
+                // 🔁 CAMBIAR MODO
+                TextButton(
+                  onPressed: () {
+                    setState(() => isLogin = !isLogin);
+                  },
+                  child: Text(isLogin
+                      ? "Create account"
+                      : "Already have an account?"),
                 ),
               ],
             ),

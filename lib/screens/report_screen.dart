@@ -1,39 +1,48 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/ai_service.dart';
 import '../services/supabase_service.dart';
 
-class ReportScreen extends ConsumerStatefulWidget {
+class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
 
   @override
-  ConsumerState<ReportScreen> createState() => _ReportScreenState();
+  State<ReportScreen> createState() => _ReportScreenState();
 }
 
-class _ReportScreenState extends ConsumerState<ReportScreen> {
-  bool hasImage = false;
+class _ReportScreenState extends State<ReportScreen> {
+  File? image;
   Map<String, dynamic>? result;
   bool isLoading = false;
 
-  // 📸 Simular tomar foto
-  void _takePhoto() {
-    setState(() {
-      hasImage = true;
-      result = null;
-    });
+  final picker = ImagePicker();
+
+  // 📸 TOMAR FOTO REAL
+  Future<void> _takePhoto() async {
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      setState(() {
+        image = File(pickedFile.path);
+        result = null;
+      });
+    }
   }
 
-  // 🤖 Analizar con IA + guardar en Supabase
-  Future<void> _analyzeWithAI() async {
-    if (!hasImage) return;
+  // 🤖 IA REAL + SUPABASE
+  Future<void> _analyze() async {
+    if (image == null) return;
 
     setState(() => isLoading = true);
 
     try {
-      // IA simulada
-      final aiResult = await AIService().analyzeImage("fake_path");
+      final aiResult = await AIService().analyzeImage(image!.path);
 
-      // 🔥 Guardar en Supabase
+      // 🔥 guardar en Supabase
       await SupabaseService().insertReport(
         zone: "zone_1",
         impact: aiResult["impacto"],
@@ -45,7 +54,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     } catch (e) {
       debugPrint("Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error saving report")),
+        const SnackBar(content: Text("Error analyzing image")),
       );
     } finally {
       setState(() => isLoading = false);
@@ -56,7 +65,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Report Waste"),
+        title: const Text("EcoScan AI"),
         centerTitle: true,
       ),
       body: Padding(
@@ -71,8 +80,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 color: Colors.black12,
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: hasImage
-                  ? const Icon(Icons.image, size: 80)
+              child: image != null
+                  ? Image.file(image!, fit: BoxFit.cover)
                   : const Center(
                       child: Text(
                         "No image selected",
@@ -99,7 +108,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: hasImage ? _analyzeWithAI : null,
+                onPressed: image != null ? _analyze : null,
                 icon: const Icon(Icons.auto_awesome),
                 label: const Text("Analyze with AI"),
               ),
@@ -107,12 +116,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
 
             const SizedBox(height: 20),
 
-            // ⏳ LOADING
             if (isLoading) const CircularProgressIndicator(),
 
             const SizedBox(height: 20),
 
-            // 📊 RESULTADO IA
+            // 📊 RESULTADO
             if (result != null)
               Container(
                 padding: const EdgeInsets.all(15),
@@ -123,18 +131,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Type: ${result!['tipo']}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      "Impact: ${result!['impacto']}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    Text(
-                      "Description: ${result!['descripcion']}",
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                    Text("Type: ${result!['tipo']}",
+                        style: const TextStyle(color: Colors.white)),
+                    Text("Impact: ${result!['impacto']}",
+                        style: const TextStyle(color: Colors.white)),
+                    Text("Description: ${result!['descripcion']}",
+                        style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               ),

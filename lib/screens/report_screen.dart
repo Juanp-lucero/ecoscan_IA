@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/ai_service.dart';
-import '../providers/pollution_provider.dart';
-import '../models/report_model.dart';
+import '../services/supabase_service.dart';
 
 class ReportScreen extends ConsumerStatefulWidget {
   const ReportScreen({super.key});
@@ -14,68 +13,130 @@ class ReportScreen extends ConsumerStatefulWidget {
 class _ReportScreenState extends ConsumerState<ReportScreen> {
   bool hasImage = false;
   Map<String, dynamic>? result;
-  bool loading = false;
+  bool isLoading = false;
 
-  void _simulateTakePhoto() {
+  // 📸 Simular tomar foto
+  void _takePhoto() {
     setState(() {
       hasImage = true;
       result = null;
     });
   }
 
-  Future<void> _analyze() async {
-    setState(() => loading = true);
+  // 🤖 Analizar con IA + guardar en Supabase
+  Future<void> _analyzeWithAI() async {
+    if (!hasImage) return;
 
-    final aiResult = await AIService().analyzeImage("fake_path");
+    setState(() => isLoading = true);
 
-    // 🔥 GUARDAR REPORTE (SIMULADO)
-    ref.read(pollutionProvider.notifier).addReport(
-          ReportModel(
-            zone: "zone_1",
-            impact: aiResult["impacto"],
-            date: DateTime.now(),
-          ),
-        );
+    try {
+      // IA simulada
+      final aiResult = await AIService().analyzeImage("fake_path");
 
-    setState(() {
-      result = aiResult;
-      loading = false;
-    });
+      // 🔥 Guardar en Supabase
+      await SupabaseService().insertReport(
+        zone: "zone_1",
+        impact: aiResult["impacto"],
+      );
+
+      setState(() {
+        result = aiResult;
+      });
+    } catch (e) {
+      debugPrint("Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error saving report")),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Report Waste")),
+      appBar: AppBar(
+        title: const Text("Report Waste"),
+        centerTitle: true,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // 📸 PREVIEW
             Container(
-              height: 200,
+              height: 220,
               width: double.infinity,
-              color: Colors.black12,
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(15),
+              ),
               child: hasImage
                   ? const Icon(Icons.image, size: 80)
-                  : const Center(child: Text("No image")),
+                  : const Center(
+                      child: Text(
+                        "No image selected",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
             ),
+
+            const SizedBox(height: 30),
+
+            // 📸 BOTÓN FOTO
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _takePhoto,
+                icon: const Icon(Icons.camera_alt),
+                label: const Text("Take Photo"),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // 🤖 BOTÓN IA
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: hasImage ? _analyzeWithAI : null,
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text("Analyze with AI"),
+              ),
+            ),
+
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _simulateTakePhoto,
-              child: const Text("Take Photo"),
-            ),
-            ElevatedButton(
-              onPressed: hasImage ? _analyze : null,
-              child: const Text("Analyze with AI"),
-            ),
-            if (loading) const CircularProgressIndicator(),
+
+            // ⏳ LOADING
+            if (isLoading) const CircularProgressIndicator(),
+
+            const SizedBox(height: 20),
+
+            // 📊 RESULTADO IA
             if (result != null)
-              Column(
-                children: [
-                  Text("Type: ${result!['tipo']}"),
-                  Text("Impact: ${result!['impacto']}"),
-                  Text("Description: ${result!['descripcion']}"),
-                ],
+              Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Type: ${result!['tipo']}",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      "Impact: ${result!['impacto']}",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    Text(
+                      "Description: ${result!['descripcion']}",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
           ],
         ),

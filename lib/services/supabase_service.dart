@@ -5,18 +5,33 @@ class SupabaseService {
 
   // 🔥 INSERTAR REPORTE
   Future<void> insertReport({
-    required String zone,
-    required String impact,
+    required String result,
+    required String imagePath,
   }) async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return;
+
     await supabase.from('reports').insert({
-      'zone': zone,
-      'impact': impact,
+      'user_id': user.id,
+      'result': result,
+      'image_url': imagePath,
+      'created_at': DateTime.now().toIso8601String(),
     });
   }
 
-  // 🔥 OBTENER REPORTES
+  // 📊 OBTENER REPORTES DEL USUARIO
   Future<List<Map<String, dynamic>>> getReports() async {
-    final response = await supabase.from('reports').select();
-    return List<Map<String, dynamic>>.from(response);
+    final user = supabase.auth.currentUser;
+
+    if (user == null) return [];
+
+    final data = await supabase
+        .from('reports')
+        .select()
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(data);
   }
 }

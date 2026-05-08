@@ -22,7 +22,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-
     loadReports();
   }
 
@@ -33,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     int medium = 0;
     int low = 0;
 
-    for (final report in data) {
+    for (var report in data) {
       final impact =
           (report['impact'] ?? '').toString().toLowerCase();
 
@@ -58,29 +57,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Widget buildMetricCard({
+  Widget statCard({
     required String title,
     required String value,
     required IconData icon,
   }) {
     return Expanded(
       child: Container(
-        margin: const EdgeInsets.all(6),
-        padding: const EdgeInsets.all(18),
+        margin: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(20),
 
         decoration: BoxDecoration(
           color: const Color(0xFF11212D),
-
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(25),
 
           border: Border.all(
-            color: Colors.greenAccent.withOpacity(0.2),
+            color: Colors.greenAccent.withOpacity(0.25),
           ),
 
           boxShadow: [
             BoxShadow(
               color: Colors.greenAccent.withOpacity(0.08),
-              blurRadius: 15,
+              blurRadius: 20,
             ),
           ],
         ),
@@ -90,27 +88,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Icon(
               icon,
               color: Colors.greenAccent,
-              size: 28,
+              size: 34,
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 14),
 
             Text(
               value,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             Text(
               title,
-              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white70,
+                fontSize: 16,
               ),
             ),
           ],
@@ -119,14 +117,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget buildReportCard(Map<String, dynamic> report) {
+  Widget reportCard(Map<String, dynamic> report) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(18),
 
       decoration: BoxDecoration(
         color: const Color(0xFF11212D),
-
         borderRadius: BorderRadius.circular(20),
 
         border: Border.all(
@@ -146,13 +143,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
           Text(
             report['impact'] ?? '',
             style: const TextStyle(
               color: Colors.orangeAccent,
-              fontWeight: FontWeight.bold,
             ),
           ),
 
@@ -164,16 +160,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: Colors.white70,
             ),
           ),
-
-          const SizedBox(height: 10),
-
-          Text(
-            report['created_at'] ?? '',
-            style: const TextStyle(
-              color: Colors.white38,
-              fontSize: 12,
-            ),
-          ),
         ],
       ),
     );
@@ -182,9 +168,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Colors.greenAccent,
+      return const Scaffold(
+        backgroundColor: Color(0xFF07111A),
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -192,21 +179,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
 
-      body: RefreshIndicator(
-        color: Colors.greenAccent,
-        onRefresh: loadReports,
-
+      body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
 
           children: [
-            const SizedBox(height: 10),
-
             const Text(
-              "Environmental Analytics",
+              "Environmental Dashboard",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -217,6 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               "AI-powered environmental monitoring dashboard",
               style: TextStyle(
                 color: Colors.white54,
+                fontSize: 16,
               ),
             ),
 
@@ -224,29 +207,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             Row(
               children: [
-                buildMetricCard(
+                statCard(
                   title: "Reports",
                   value: totalReports.toString(),
-                  icon: Icons.analytics,
+                  icon: Icons.bar_chart,
                 ),
 
-                buildMetricCard(
+                statCard(
                   title: "High Impact",
                   value: highImpact.toString(),
-                  icon: Icons.warning_amber,
+                  icon: Icons.warning_amber_rounded,
                 ),
               ],
             ),
 
             Row(
               children: [
-                buildMetricCard(
+                statCard(
                   title: "Medium",
                   value: mediumImpact.toString(),
                   icon: Icons.eco,
                 ),
 
-                buildMetricCard(
+                statCard(
                   title: "Low",
                   value: lowImpact.toString(),
                   icon: Icons.check_circle,
@@ -260,7 +243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               "Recent Reports",
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -273,11 +256,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   "No reports yet",
                   style: TextStyle(
                     color: Colors.white54,
+                    fontSize: 18,
                   ),
                 ),
               ),
 
-            ...reports.map(buildReportCard),
+            ...reports.map(reportCard),
           ],
         ),
       ),

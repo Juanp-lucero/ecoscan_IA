@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../utils/app_strings.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -20,29 +21,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final auth = AuthService();
 
-  // 🔐 VALIDACIONES
   String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return "Falta ingresar el email";
+      return AppStrings.isEnglish
+          ? "Email required"
+          : "Falta ingresar el correo";
     }
     if (!value.contains("@")) {
-      return "Email inválido";
+      return AppStrings.isEnglish
+          ? "Invalid email"
+          : "Correo inválido";
     }
     return null;
   }
 
   String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return "Falta ingresar la contraseña";
+      return AppStrings.isEnglish
+          ? "Password required"
+          : "Falta ingresar la contraseña";
     }
     if (value.length < 6) {
-      return "Mínimo 6 caracteres";
+      return AppStrings.isEnglish
+          ? "Min 6 characters"
+          : "Mínimo 6 caracteres";
     }
     return null;
   }
 
   Future<void> _submit() async {
-    // 🚨 VALIDAR FORM
     if (!_formKey.currentState!.validate()) return;
 
     final email = emailController.text.trim();
@@ -62,18 +69,14 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } catch (e) {
-      String message = "Error inesperado";
-
-      if (e.toString().contains("Invalid login credentials")) {
-        message = "Correo o contraseña incorrectos";
-      } else if (e.toString().contains("User already registered")) {
-        message = "El usuario ya existe";
-      } else if (e.toString().contains("rate limit")) {
-        message = "Demasiados intentos, espera un momento";
-      }
+      // 🔥 IMPORTANTE: ver error real
+      print("ERROR AUTH: $e");
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(
+          content: Text(e.toString()),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
       setState(() => isLoading = false);
@@ -83,63 +86,139 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(25),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F2027),
+              Color(0xFF203A43),
+              Color(0xFF2C5364),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Center(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "EcoScan AI 🌱",
-                  style: TextStyle(fontSize: 28),
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(25),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.eco,
+                      size: 80, color: Colors.greenAccent),
 
-                const SizedBox(height: 30),
+                  const SizedBox(height: 10),
 
-                // 📧 EMAIL
-                TextFormField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: "Email"),
-                  validator: validateEmail,
-                ),
-
-                const SizedBox(height: 10),
-
-                // 🔐 PASSWORD
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: "Password"),
-                  validator: validatePassword,
-                ),
-
-                const SizedBox(height: 20),
-
-                // 🔘 BOTÓN
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submit,
-                    child: isLoading
-                        ? const CircularProgressIndicator()
-                        : Text(isLogin ? "Login" : "Register"),
+                  Text(
+                    AppStrings.appName,
+                    style: const TextStyle(
+                        fontSize: 28, color: Colors.white),
                   ),
-                ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 30),
 
-                // 🔁 CAMBIAR MODO
-                TextButton(
-                  onPressed: () {
-                    setState(() => isLogin = !isLogin);
-                  },
-                  child: Text(isLogin
-                      ? "Create account"
-                      : "Already have an account?"),
-                ),
-              ],
+                  // EMAIL
+                  TextFormField(
+                    controller: emailController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: AppStrings.email,
+                      labelStyle:
+                          const TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(
+                            color: Colors.greenAccent),
+                      ),
+                    ),
+                    validator: validateEmail,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // PASSWORD
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: true,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: AppStrings.password,
+                      labelStyle:
+                          const TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: const BorderSide(
+                            color: Colors.greenAccent),
+                      ),
+                    ),
+                    validator: validatePassword,
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // BOTÓN
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        backgroundColor: Colors.greenAccent,
+                        foregroundColor: Colors.black,
+                      ),
+                      child: isLoading
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              isLogin
+                                  ? AppStrings.login
+                                  : AppStrings.register,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold),
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // SWITCH LOGIN / REGISTER
+                  TextButton(
+                    onPressed: () {
+                      setState(() => isLogin = !isLogin);
+                    },
+                    child: Text(
+                      isLogin
+                          ? (AppStrings.isEnglish
+                              ? "Don't have an account? Register"
+                              : "¿No tienes cuenta? Crear cuenta")
+                          : (AppStrings.isEnglish
+                              ? "Already have an account? Login"
+                              : "¿Ya tienes cuenta? Iniciar sesión"),
+                      style: const TextStyle(
+                          color: Colors.greenAccent),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

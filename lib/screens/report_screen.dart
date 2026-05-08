@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -13,118 +14,298 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  File? image;
-  Map<String, dynamic>? result;
+  File? selectedImage;
+
+  String? detectedType;
+  String? impact;
+  String? description;
+
   bool isLoading = false;
 
-  final picker = ImagePicker();
+  final ImagePicker picker = ImagePicker();
 
-  // 📸 TOMAR FOTO
-  Future<void> _takePhoto() async {
+  Future<void> pickImage() async {
     final pickedFile = await picker.pickImage(
       source: ImageSource.camera,
-      imageQuality: 70,
+      imageQuality: 80,
     );
 
-    if (pickedFile != null) {
-      setState(() {
-        image = File(pickedFile.path);
-        result = null;
-      });
-    }
+    if (pickedFile == null) return;
+
+    setState(() {
+      selectedImage = File(pickedFile.path);
+
+      detectedType = null;
+      impact = null;
+      description = null;
+    });
   }
 
-  // 🤖 ANALIZAR + GUARDAR
-  Future<void> _analyze() async {
-    if (image == null) return;
+  Future<void> analyzeImage() async {
+    if (selectedImage == null) return;
 
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+    });
 
     try {
-      final aiResult = await AIService().analyzeImage(image!.path);
+      final result = await AIService().analyzeImage(selectedImage!);
 
-      // 🔥 GUARDAR EN SUPABASE
       await SupabaseService().insertReport(
-        result: aiResult["tipo"] ?? "Unknown",
-        imagePath: image!.path,
+        type: result.type,
+        impact: result.impact,
+        description: result.description,
       );
 
       setState(() {
-        result = aiResult;
+        detectedType = result.type;
+        impact = result.impact;
+        description = result.description;
       });
-    } catch (e) {
-      debugPrint("Error: $e");
+    } catch (error) {
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error analyzing image")),
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text(
+            "AI Error: $error",
+          ),
+        ),
       );
     } finally {
-      setState(() => isLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // 📸 PREVIEW
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.black12,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: image != null
-                ? Image.file(image!, fit: BoxFit.cover)
-                : const Center(child: Text("No image selected")),
+  Widget buildInfoCard({
+    required String title,
+    required String value,
+    required Color valueColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
+
+      decoration: BoxDecoration(
+        color: const Color(0xFF11212D),
+        borderRadius: BorderRadius.circular(20),
+
+        border: Border.all(
+          color: Colors.greenAccent.withOpacity(0.25),
+        ),
+
+        boxShadow: [
+          BoxShadow(
+            color: Colors.greenAccent.withOpacity(0.08),
+            blurRadius: 15,
           ),
+        ],
+      ),
 
-          const SizedBox(height: 20),
-
-          ElevatedButton.icon(
-            onPressed: _takePhoto,
-            icon: const Icon(Icons.camera_alt),
-            label: const Text("Take Photo"),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 14,
+            ),
           ),
 
           const SizedBox(height: 10),
 
-          ElevatedButton.icon(
-            onPressed: image != null ? _analyze : null,
-            icon: const Icon(Icons.auto_awesome),
-            label: const Text("Analyze with AI"),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 20),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF07111A),
 
-          if (isLoading) const CircularProgressIndicator(),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
 
-          const SizedBox(height: 20),
+          children: [
+            const SizedBox(height: 10),
 
-          // 📊 RESULTADO
-          if (result != null)
-            Container(
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Type: ${result!['tipo']}",
-                      style: const TextStyle(color: Colors.white)),
-                  Text("Impact: ${result!['impacto']}",
-                      style: const TextStyle(color: Colors.white)),
-                  Text("Description: ${result!['descripcion']}",
-                      style: const TextStyle(color: Colors.white)),
-                ],
+            const Text(
+              "AI Environmental Analysis",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
               ),
             ),
-        ],
+
+            const SizedBox(height: 8),
+
+            const Text(
+              "Analyze environmental waste with artificial intelligence",
+              style: TextStyle(
+                color: Colors.white54,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            Container(
+              height: 320,
+
+              decoration: BoxDecoration(
+                color: const Color(0xFF11212D),
+                borderRadius: BorderRadius.circular(25),
+
+                border: Border.all(
+                  color: Colors.greenAccent.withOpacity(0.4),
+                  width: 2,
+                ),
+
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.greenAccent.withOpacity(0.15),
+                    blurRadius: 25,
+                  ),
+                ],
+              ),
+
+              child: selectedImage == null
+                  ? const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.camera_alt,
+                            color: Colors.greenAccent,
+                            size: 70,
+                          ),
+
+                          SizedBox(height: 15),
+
+                          Text(
+                            "No image selected",
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(25),
+                      child: Image.file(
+                        selectedImage!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+            ),
+
+            const SizedBox(height: 25),
+
+            SizedBox(
+              height: 58,
+
+              child: ElevatedButton.icon(
+                onPressed: pickImage,
+
+                icon: const Icon(Icons.camera_alt),
+
+                label: const Text(
+                  "Capture Image",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.greenAccent,
+                  foregroundColor: Colors.black,
+
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            SizedBox(
+              height: 58,
+
+              child: ElevatedButton.icon(
+                onPressed: isLoading ? null : analyzeImage,
+
+                icon: const Icon(Icons.auto_awesome),
+
+                label: isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        "Analyze with AI",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1BE68C),
+                  foregroundColor: Colors.black,
+
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            if (detectedType != null) ...[
+              buildInfoCard(
+                title: "Detected Waste",
+                value: detectedType!,
+                valueColor: Colors.white,
+              ),
+
+              buildInfoCard(
+                title: "Environmental Impact",
+                value: impact!,
+                valueColor: Colors.orangeAccent,
+              ),
+
+              buildInfoCard(
+                title: "AI Description",
+                value: description!,
+                valueColor: Colors.white70,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

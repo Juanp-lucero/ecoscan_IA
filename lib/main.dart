@@ -24,10 +24,6 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'EcoScan AI',
-
-      theme: ThemeData.dark(),
-
       home: session == null
           ? const LoginScreen()
           : const HomeScreen(),

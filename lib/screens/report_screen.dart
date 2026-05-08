@@ -49,13 +49,15 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      final result = await AIService().analyzeImage(selectedImage!);
+      print("STARTING AI ANALYSIS");
 
-      await SupabaseService().insertReport(
-        type: result.type,
-        impact: result.impact,
-        description: result.description,
-      );
+      final result =
+          await AIService().analyzeImage(selectedImage!);
+
+      print("AI RESULT:");
+      print(result.type);
+      print(result.impact);
+      print(result.description);
 
       setState(() {
         detectedType = result.type;
@@ -63,6 +65,9 @@ class _ReportScreenState extends State<ReportScreen> {
         description = result.description;
       });
     } catch (error) {
+      print("SUPABASE / AI ERROR:");
+      print(error);
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -80,6 +85,43 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
+  Future<void> saveReport() async {
+    if (detectedType == null ||
+        impact == null ||
+        description == null) {
+      return;
+    }
+
+    try {
+      await SupabaseService().insertReport(
+        type: detectedType!,
+        impact: impact!,
+        description: description!,
+      );
+
+      print("REPORT INSERT COMPLETED");
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text("Reporte guardado correctamente"),
+        ),
+      );
+    } catch (e) {
+      print("SAVE ERROR:");
+      print(e);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("Error guardando reporte: $e"),
+        ),
+      );
+    }
+  }
+
   Widget buildInfoCard({
     required String title,
     required String value,
@@ -89,15 +131,12 @@ class _ReportScreenState extends State<ReportScreen> {
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
-
       decoration: BoxDecoration(
         color: const Color(0xFF11212D),
         borderRadius: BorderRadius.circular(20),
-
         border: Border.all(
           color: Colors.greenAccent.withOpacity(0.25),
         ),
-
         boxShadow: [
           BoxShadow(
             color: Colors.greenAccent.withOpacity(0.08),
@@ -105,7 +144,6 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         ],
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -116,9 +154,7 @@ class _ReportScreenState extends State<ReportScreen> {
               fontSize: 14,
             ),
           ),
-
           const SizedBox(height: 10),
-
           Text(
             value,
             style: TextStyle(
@@ -136,11 +172,9 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
-
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
-
           children: [
             const SizedBox(height: 10),
 
@@ -166,16 +200,13 @@ class _ReportScreenState extends State<ReportScreen> {
 
             Container(
               height: 320,
-
               decoration: BoxDecoration(
                 color: const Color(0xFF11212D),
                 borderRadius: BorderRadius.circular(25),
-
                 border: Border.all(
                   color: Colors.greenAccent.withOpacity(0.4),
                   width: 2,
                 ),
-
                 boxShadow: [
                   BoxShadow(
                     color: Colors.greenAccent.withOpacity(0.15),
@@ -183,20 +214,18 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                 ],
               ),
-
               child: selectedImage == null
                   ? const Center(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisAlignment:
+                            MainAxisAlignment.center,
                         children: [
                           Icon(
                             Icons.camera_alt,
                             color: Colors.greenAccent,
                             size: 70,
                           ),
-
                           SizedBox(height: 15),
-
                           Text(
                             "No image selected",
                             style: TextStyle(
@@ -220,12 +249,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
-
               child: ElevatedButton.icon(
                 onPressed: pickImage,
-
                 icon: const Icon(Icons.camera_alt),
-
                 label: const Text(
                   "Capture Image",
                   style: TextStyle(
@@ -233,11 +259,9 @@ class _ReportScreenState extends State<ReportScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.greenAccent,
                   foregroundColor: Colors.black,
-
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(18),
                   ),
@@ -249,12 +273,10 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
-
               child: ElevatedButton.icon(
-                onPressed: isLoading ? null : analyzeImage,
-
+                onPressed:
+                    isLoading ? null : analyzeImage,
                 icon: const Icon(Icons.auto_awesome),
-
                 label: isLoading
                     ? const SizedBox(
                         width: 24,
@@ -271,17 +293,43 @@ class _ReportScreenState extends State<ReportScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1BE68C),
+                  backgroundColor:
+                      const Color(0xFF1BE68C),
                   foregroundColor: Colors.black,
-
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius:
+                        BorderRadius.circular(18),
                   ),
                 ),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            if (detectedType != null)
+              SizedBox(
+                height: 58,
+                child: ElevatedButton.icon(
+                  onPressed: saveReport,
+                  icon: const Icon(Icons.save),
+                  label: const Text(
+                    "Guardar Reporte",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
+              ),
 
             const SizedBox(height: 30),
 

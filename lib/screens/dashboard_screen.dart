@@ -6,7 +6,7 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+ State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
@@ -25,7 +25,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     loadReports();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    loadReports();
+  }
+
   Future<void> loadReports() async {
+    setState(() {
+      isLoading = true;
+    });
+
     final data = await SupabaseService().getReports();
 
     int high = 0;
@@ -180,89 +191,93 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: const Color(0xFF07111A),
 
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+        child: RefreshIndicator(
+          onRefresh: loadReports,
 
-          children: [
-            const Text(
-              "Environmental Dashboard",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
+          child: ListView(
+            padding: const EdgeInsets.all(20),
+
+            children: [
+              const Text(
+                "Environmental Dashboard",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            const Text(
-              "AI-powered environmental monitoring dashboard",
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 16,
+              const Text(
+                "AI-powered environmental monitoring dashboard",
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 16,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 30),
+              const SizedBox(height: 30),
 
-            Row(
-              children: [
-                statCard(
-                  title: "Reports",
-                  value: totalReports.toString(),
-                  icon: Icons.bar_chart,
-                ),
+              Row(
+                children: [
+                  statCard(
+                    title: "Reports",
+                    value: totalReports.toString(),
+                    icon: Icons.bar_chart,
+                  ),
 
-                statCard(
-                  title: "High Impact",
-                  value: highImpact.toString(),
-                  icon: Icons.warning_amber_rounded,
-                ),
-              ],
-            ),
-
-            Row(
-              children: [
-                statCard(
-                  title: "Medium",
-                  value: mediumImpact.toString(),
-                  icon: Icons.eco,
-                ),
-
-                statCard(
-                  title: "Low",
-                  value: lowImpact.toString(),
-                  icon: Icons.check_circle,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            const Text(
-              "Recent Reports",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+                  statCard(
+                    title: "High Impact",
+                    value: highImpact.toString(),
+                    icon: Icons.warning_amber_rounded,
+                  ),
+                ],
               ),
-            ),
 
-            const SizedBox(height: 20),
+              Row(
+                children: [
+                  statCard(
+                    title: "Medium",
+                    value: mediumImpact.toString(),
+                    icon: Icons.eco,
+                  ),
 
-            if (reports.isEmpty)
-              const Center(
-                child: Text(
-                  "No reports yet",
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 18,
+                  statCard(
+                    title: "Low",
+                    value: lowImpact.toString(),
+                    icon: Icons.check_circle,
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 30),
+
+              const Text(
+                "Recent Reports",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              if (reports.isEmpty)
+                const Center(
+                  child: Text(
+                    "No reports yet",
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 18,
+                    ),
                   ),
                 ),
-              ),
 
-            ...reports.map(reportCard),
-          ],
+              ...reports.map(reportCard),
+            ],
+          ),
         ),
       ),
     );

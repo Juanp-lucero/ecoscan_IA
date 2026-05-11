@@ -19,6 +19,8 @@ class SupabaseService {
     } catch (e) {
       print("ERROR INSERTING REPORT:");
       print(e);
+
+      rethrow;
     }
   }
 

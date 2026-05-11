@@ -65,7 +65,7 @@ class _ReportScreenState extends State<ReportScreen> {
         description = result.description;
       });
     } catch (error) {
-      print("SUPABASE / AI ERROR:");
+      print("AI ERROR:");
       print(error);
 
       if (!mounted) return;
@@ -93,6 +93,10 @@ class _ReportScreenState extends State<ReportScreen> {
     }
 
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       await SupabaseService().insertReport(
         type: detectedType!,
         impact: impact!,
@@ -106,19 +110,29 @@ class _ReportScreenState extends State<ReportScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.green,
-          content: Text("Reporte guardado correctamente"),
+          content: Text(
+            "Reporte guardado correctamente",
+          ),
         ),
       );
     } catch (e) {
       print("SAVE ERROR:");
       print(e);
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text("Error guardando reporte: $e"),
+          content: Text(
+            "Error guardando reporte: $e",
+          ),
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -311,15 +325,25 @@ class _ReportScreenState extends State<ReportScreen> {
               SizedBox(
                 height: 58,
                 child: ElevatedButton.icon(
-                  onPressed: saveReport,
+                  onPressed:
+                      isLoading ? null : saveReport,
                   icon: const Icon(Icons.save),
-                  label: const Text(
-                    "Guardar Reporte",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  label: isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.black,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text(
+                          "Guardar Reporte",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orangeAccent,
                     foregroundColor: Colors.black,

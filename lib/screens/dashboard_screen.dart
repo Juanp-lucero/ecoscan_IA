@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../services/supabase_service.dart';
+import 'reports_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
- State<DashboardScreen> createState() => _DashboardScreenState();
+  State<DashboardScreen> createState() =>
+      _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState
+    extends State<DashboardScreen> {
   List<Map<String, dynamic>> reports = [];
 
   bool isLoading = true;
@@ -22,6 +25,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+
     loadReports();
   }
 
@@ -37,7 +41,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       isLoading = true;
     });
 
-    final data = await SupabaseService().getReports();
+    final data =
+        await SupabaseService().getReports();
 
     int high = 0;
     int medium = 0;
@@ -45,7 +50,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     for (var report in data) {
       final impact =
-          (report['impact'] ?? '').toString().toLowerCase();
+          (report['impact'] ?? '')
+              .toString()
+              .toLowerCase();
 
       if (impact.contains('high')) {
         high++;
@@ -72,81 +79,105 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String title,
     required String value,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
     return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(8),
-        padding: const EdgeInsets.all(20),
+      child: GestureDetector(
+        onTap: onTap,
 
-        decoration: BoxDecoration(
-          color: const Color(0xFF11212D),
-          borderRadius: BorderRadius.circular(25),
+        child: Container(
+          margin: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(20),
 
-          border: Border.all(
-            color: Colors.greenAccent.withOpacity(0.25),
+          decoration: BoxDecoration(
+            color: const Color(0xFF11212D),
+
+            borderRadius:
+                BorderRadius.circular(25),
+
+            border: Border.all(
+              color:
+                  Colors.greenAccent.withOpacity(
+                0.25,
+              ),
+            ),
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.greenAccent
+                    .withOpacity(0.08),
+
+                blurRadius: 20,
+              ),
+            ],
           ),
 
-          boxShadow: [
-            BoxShadow(
-              color: Colors.greenAccent.withOpacity(0.08),
-              blurRadius: 20,
-            ),
-          ],
-        ),
+          child: Column(
+            children: [
 
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: Colors.greenAccent,
-              size: 34,
-            ),
-
-            const SizedBox(height: 14),
-
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
+              Icon(
+                icon,
+                color: Colors.greenAccent,
+                size: 34,
               ),
-            ),
 
-            const SizedBox(height: 10),
+              const SizedBox(height: 14),
 
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 10),
+
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget reportCard(Map<String, dynamic> report) {
+  Widget reportCard(
+    Map<String, dynamic> report,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(18),
 
       decoration: BoxDecoration(
         color: const Color(0xFF11212D),
-        borderRadius: BorderRadius.circular(20),
+
+        borderRadius:
+            BorderRadius.circular(20),
 
         border: Border.all(
-          color: Colors.greenAccent.withOpacity(0.2),
+          color:
+              Colors.greenAccent.withOpacity(
+            0.2,
+          ),
         ),
       ),
 
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
         children: [
+
           Text(
             report['type'] ?? 'Unknown',
+
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -158,6 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           Text(
             report['impact'] ?? '',
+
             style: const TextStyle(
               color: Colors.orangeAccent,
             ),
@@ -167,6 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           Text(
             report['description'] ?? '',
+
             style: const TextStyle(
               color: Colors.white70,
             ),
@@ -181,8 +214,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFF07111A),
+
         body: Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: Colors.greenAccent,
+          ),
         ),
       );
     }
@@ -198,8 +234,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(20),
 
             children: [
+
               const Text(
                 "Environmental Dashboard",
+
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 30,
@@ -211,6 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const Text(
                 "AI-powered environmental monitoring dashboard",
+
                 style: TextStyle(
                   color: Colors.white54,
                   fontSize: 16,
@@ -221,31 +260,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               Row(
                 children: [
+
                   statCard(
                     title: "Reports",
-                    value: totalReports.toString(),
+                    value:
+                        totalReports.toString(),
+
                     icon: Icons.bar_chart,
+
+                    onTap: () {
+                      Navigator.push(
+                        context,
+
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ReportsHistoryScreen(),
+                        ),
+                      );
+                    },
                   ),
 
                   statCard(
                     title: "High Impact",
-                    value: highImpact.toString(),
-                    icon: Icons.warning_amber_rounded,
+                    value:
+                        highImpact.toString(),
+
+                    icon: Icons
+                        .warning_amber_rounded,
                   ),
                 ],
               ),
 
               Row(
                 children: [
+
                   statCard(
                     title: "Medium",
-                    value: mediumImpact.toString(),
+                    value:
+                        mediumImpact.toString(),
+
                     icon: Icons.eco,
                   ),
 
                   statCard(
                     title: "Low",
-                    value: lowImpact.toString(),
+                    value:
+                        lowImpact.toString(),
+
                     icon: Icons.check_circle,
                   ),
                 ],
@@ -255,6 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const Text(
                 "Recent Reports",
+
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -268,6 +330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const Center(
                   child: Text(
                     "No reports yet",
+
                     style: TextStyle(
                       color: Colors.white54,
                       fontSize: 18,

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../services/ai_service.dart';
 import '../services/supabase_service.dart';
+import '../utils/app_strings.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -108,10 +109,10 @@ class _ReportScreenState extends State<ReportScreen> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           backgroundColor: Colors.green,
           content: Text(
-            "Reporte guardado correctamente",
+            AppStrings.reportSaved,
           ),
         ),
       );
@@ -159,7 +160,8 @@ class _ReportScreenState extends State<ReportScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
             title,
@@ -168,7 +170,9 @@ class _ReportScreenState extends State<ReportScreen> {
               fontSize: 14,
             ),
           ),
+
           const SizedBox(height: 10),
+
           Text(
             value,
             style: TextStyle(
@@ -186,15 +190,18 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
+
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
+
           children: [
             const SizedBox(height: 10),
 
-            const Text(
-              "AI Environmental Analysis",
-              style: TextStyle(
+            Text(
+              AppStrings.aiEnvironmentalAnalysis,
+
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -203,9 +210,10 @@ class _ReportScreenState extends State<ReportScreen> {
 
             const SizedBox(height: 8),
 
-            const Text(
-              "Analyze environmental waste with artificial intelligence",
-              style: TextStyle(
+            Text(
+              AppStrings.analyzeEnvironmentalWaste,
+
+              style: const TextStyle(
                 color: Colors.white54,
               ),
             ),
@@ -214,44 +222,70 @@ class _ReportScreenState extends State<ReportScreen> {
 
             Container(
               height: 320,
+
               decoration: BoxDecoration(
                 color: const Color(0xFF11212D),
-                borderRadius: BorderRadius.circular(25),
+
+                borderRadius:
+                    BorderRadius.circular(25),
+
                 border: Border.all(
-                  color: Colors.greenAccent.withOpacity(0.4),
+                  color: Colors.greenAccent
+                      .withOpacity(0.4),
+
                   width: 2,
                 ),
+
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.greenAccent.withOpacity(0.15),
+                    color: Colors.greenAccent
+                        .withOpacity(0.15),
+
                     blurRadius: 25,
                   ),
                 ],
               ),
+
               child: selectedImage == null
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisAlignment:
                             MainAxisAlignment.center,
+
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.camera_alt,
-                            color: Colors.greenAccent,
+                            color:
+                                Colors.greenAccent,
                             size: 70,
                           ),
-                          SizedBox(height: 15),
+
+                          const SizedBox(
+                            height: 15,
+                          ),
+
                           Text(
-                            "No image selected",
-                            style: TextStyle(
-                              color: Colors.white54,
+                            AppStrings
+                                .noImageSelected,
+
+                            style:
+                                const TextStyle(
+                              color:
+                                  Colors.white54,
+
                               fontSize: 16,
                             ),
                           ),
                         ],
                       ),
                     )
+
                   : ClipRRect(
-                      borderRadius: BorderRadius.circular(25),
+                      borderRadius:
+                          BorderRadius.circular(
+                        25,
+                      ),
+
                       child: Image.file(
                         selectedImage!,
                         fit: BoxFit.cover,
@@ -263,21 +297,38 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
+
               child: ElevatedButton.icon(
                 onPressed: pickImage,
-                icon: const Icon(Icons.camera_alt),
-                label: const Text(
-                  "Capture Image",
-                  style: TextStyle(
+
+                icon: const Icon(
+                  Icons.camera_alt,
+                ),
+
+                label: Text(
+                  AppStrings.captureImage,
+
+                  style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+
+                style:
+                    ElevatedButton.styleFrom(
+                  backgroundColor:
+                      Colors.greenAccent,
+
+                  foregroundColor:
+                      Colors.black,
+
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      18,
+                    ),
                   ),
                 ),
               ),
@@ -287,33 +338,56 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
+
               child: ElevatedButton.icon(
                 onPressed:
-                    isLoading ? null : analyzeImage,
-                icon: const Icon(Icons.auto_awesome),
+                    isLoading
+                        ? null
+                        : analyzeImage,
+
+                icon: const Icon(
+                  Icons.auto_awesome,
+                ),
+
                 label: isLoading
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(
+
+                        child:
+                            CircularProgressIndicator(
                           color: Colors.black,
                           strokeWidth: 3,
                         ),
                       )
-                    : const Text(
-                        "Analyze with AI",
-                        style: TextStyle(
+
+                    : Text(
+                        AppStrings.analyze,
+
+                        style:
+                            const TextStyle(
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
-                style: ElevatedButton.styleFrom(
+
+                style:
+                    ElevatedButton.styleFrom(
                   backgroundColor:
-                      const Color(0xFF1BE68C),
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
+                      const Color(
+                    0xFF1BE68C,
+                  ),
+
+                  foregroundColor:
+                      Colors.black,
+
+                  shape:
+                      RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius.circular(18),
+                        BorderRadius.circular(
+                      18,
+                    ),
                   ),
                 ),
               ),
@@ -324,32 +398,61 @@ class _ReportScreenState extends State<ReportScreen> {
             if (detectedType != null)
               SizedBox(
                 height: 58,
-                child: ElevatedButton.icon(
+
+                child:
+                    ElevatedButton.icon(
                   onPressed:
-                      isLoading ? null : saveReport,
-                  icon: const Icon(Icons.save),
+                      isLoading
+                          ? null
+                          : saveReport,
+
+                  icon: const Icon(
+                    Icons.save,
+                  ),
+
                   label: isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.black,
+
+                          child:
+                              CircularProgressIndicator(
+                            color:
+                                Colors.black,
+
                             strokeWidth: 3,
                           ),
                         )
-                      : const Text(
-                          "Guardar Reporte",
-                          style: TextStyle(
+
+                      : Text(
+                          AppStrings
+                              .saveReport,
+
+                          style:
+                              const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
                           ),
                         ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
+
+                  style:
+                      ElevatedButton
+                          .styleFrom(
+                    backgroundColor:
+                        Colors.orangeAccent,
+
+                    foregroundColor:
+                        Colors.black,
+
+                    shape:
+                        RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(18),
+                          BorderRadius
+                              .circular(
+                        18,
+                      ),
                     ),
                   ),
                 ),
@@ -359,21 +462,32 @@ class _ReportScreenState extends State<ReportScreen> {
 
             if (detectedType != null) ...[
               buildInfoCard(
-                title: "Detected Waste",
+                title:
+                    AppStrings.detectedWaste,
+
                 value: detectedType!,
+
                 valueColor: Colors.white,
               ),
 
               buildInfoCard(
-                title: "Environmental Impact",
+                title: AppStrings
+                    .environmentalImpact,
+
                 value: impact!,
-                valueColor: Colors.orangeAccent,
+
+                valueColor:
+                    Colors.orangeAccent,
               ),
 
               buildInfoCard(
-                title: "AI Description",
+                title:
+                    AppStrings.aiDescription,
+
                 value: description!,
-                valueColor: Colors.white70,
+
+                valueColor:
+                    Colors.white70,
               ),
             ],
           ],

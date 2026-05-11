@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/supabase_service.dart';
+import '../utils/app_strings.dart';
 
 class ReportsHistoryScreen extends StatefulWidget {
   const ReportsHistoryScreen({super.key});
@@ -160,7 +161,8 @@ class _ReportsHistoryScreenState
           ),
 
           decoration: InputDecoration(
-            hintText: 'Search reports...',
+            hintText: AppStrings.searchReports,
+
             hintStyle: const TextStyle(
               color: Colors.white38,
             ),
@@ -215,25 +217,33 @@ class _ReportsHistoryScreenState
                     iconEnabledColor:
                         Colors.greenAccent,
 
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: 'All',
-                        child: Text('All Impacts'),
+                        child: Text(
+                          AppStrings.allImpacts,
+                        ),
                       ),
 
                       DropdownMenuItem(
                         value: 'High',
-                        child: Text('High'),
+                        child: Text(
+                          AppStrings.high,
+                        ),
                       ),
 
                       DropdownMenuItem(
                         value: 'Medium',
-                        child: Text('Medium'),
+                        child: Text(
+                          AppStrings.medium,
+                        ),
                       ),
 
                       DropdownMenuItem(
                         value: 'Low',
-                        child: Text('Low'),
+                        child: Text(
+                          AppStrings.low,
+                        ),
                       ),
                     ],
 
@@ -281,15 +291,19 @@ class _ReportsHistoryScreenState
                     iconEnabledColor:
                         Colors.greenAccent,
 
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: 'Newest',
-                        child: Text('Newest'),
+                        child: Text(
+                          AppStrings.newest,
+                        ),
                       ),
 
                       DropdownMenuItem(
                         value: 'Oldest',
-                        child: Text('Oldest'),
+                        child: Text(
+                          AppStrings.oldest,
+                        ),
                       ),
                     ],
 
@@ -321,9 +335,9 @@ class _ReportsHistoryScreenState
         backgroundColor: const Color(0xFF07111A),
         elevation: 0,
 
-        title: const Text(
-          "Reports History",
-          style: TextStyle(
+        title: Text(
+          AppStrings.reportsHistory,
+          style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
@@ -346,10 +360,10 @@ class _ReportsHistoryScreenState
 
                 Expanded(
                   child: filteredReports.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
-                            "No reports found",
-                            style: TextStyle(
+                            AppStrings.noReportsFound,
+                            style: const TextStyle(
                               color: Colors.white54,
                               fontSize: 16,
                             ),

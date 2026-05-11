@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
 import '../services/supabase_service.dart';
+import '../utils/app_strings.dart';
 import 'reports_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -123,7 +124,6 @@ class _DashboardScreenState
 
           child: Column(
             children: [
-
               Icon(
                 icon,
                 color: Colors.greenAccent,
@@ -163,7 +163,6 @@ class _DashboardScreenState
   }) {
     return Row(
       children: [
-
         Container(
           width: 14,
           height: 14,
@@ -214,7 +213,6 @@ class _DashboardScreenState
             CrossAxisAlignment.start,
 
         children: [
-
           Text(
             report['type'] ?? 'Unknown',
 
@@ -274,11 +272,10 @@ class _DashboardScreenState
             padding: const EdgeInsets.all(20),
 
             children: [
+              Text(
+                AppStrings.environmentalDashboard,
 
-              const Text(
-                "Environmental Dashboard",
-
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
@@ -287,10 +284,10 @@ class _DashboardScreenState
 
               const SizedBox(height: 8),
 
-              const Text(
-                "AI-powered environmental monitoring dashboard",
+              Text(
+                AppStrings.dashboardSubtitle,
 
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white54,
                   fontSize: 16,
                 ),
@@ -300,9 +297,8 @@ class _DashboardScreenState
 
               Row(
                 children: [
-
                   statCard(
-                    title: "Reports",
+                    title: AppStrings.reports,
                     value:
                         totalReports.toString(),
 
@@ -321,7 +317,9 @@ class _DashboardScreenState
                   ),
 
                   statCard(
-                    title: "High Impact",
+                    title:
+                        AppStrings.highImpact,
+
                     value:
                         highImpact.toString(),
 
@@ -333,9 +331,9 @@ class _DashboardScreenState
 
               Row(
                 children: [
-
                   statCard(
-                    title: "Medium",
+                    title: AppStrings.medium,
+
                     value:
                         mediumImpact.toString(),
 
@@ -343,7 +341,8 @@ class _DashboardScreenState
                   ),
 
                   statCard(
-                    title: "Low",
+                    title: AppStrings.low,
+
                     value:
                         lowImpact.toString(),
 
@@ -354,10 +353,10 @@ class _DashboardScreenState
 
               const SizedBox(height: 35),
 
-              const Text(
-                "Impact Distribution",
+              Text(
+                AppStrings.impactDistribution,
 
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -386,7 +385,6 @@ class _DashboardScreenState
 
                 child: Column(
                   children: [
-
                     Expanded(
                       child: PieChart(
                         PieChartData(
@@ -394,7 +392,6 @@ class _DashboardScreenState
                           centerSpaceRadius: 55,
 
                           sections: [
-
                             PieChartSectionData(
                               value:
                                   highImpact.toDouble(),
@@ -476,22 +473,24 @@ class _DashboardScreenState
                               .spaceEvenly,
 
                       children: [
-
                         buildLegend(
                           color: Colors.redAccent,
-                          text: "High",
+                          text: AppStrings.high,
                         ),
 
                         buildLegend(
                           color:
                               Colors.orangeAccent,
-                          text: "Medium",
+
+                          text:
+                              AppStrings.medium,
                         ),
 
                         buildLegend(
                           color:
                               Colors.greenAccent,
-                          text: "Low",
+
+                          text: AppStrings.low,
                         ),
                       ],
                     ),
@@ -501,10 +500,10 @@ class _DashboardScreenState
 
               const SizedBox(height: 35),
 
-              const Text(
-                "Recent Reports",
+              Text(
+                AppStrings.recentReports,
 
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -514,11 +513,11 @@ class _DashboardScreenState
               const SizedBox(height: 20),
 
               if (reports.isEmpty)
-                const Center(
+                Center(
                   child: Text(
-                    "No reports yet",
+                    AppStrings.noReports,
 
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white54,
                       fontSize: 18,
                     ),

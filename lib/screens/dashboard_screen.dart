@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 import '../services/supabase_service.dart';
 import 'reports_history_screen.dart';
@@ -21,6 +22,14 @@ class _DashboardScreenState
   int highImpact = 0;
   int mediumImpact = 0;
   int lowImpact = 0;
+
+  double get totalImpact {
+    return (
+      highImpact +
+      mediumImpact +
+      lowImpact
+    ).toDouble();
+  }
 
   @override
   void initState() {
@@ -145,6 +154,37 @@ class _DashboardScreenState
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildLegend({
+    required Color color,
+    required String text,
+  }) {
+    return Row(
+      children: [
+
+        Container(
+          width: 14,
+          height: 14,
+
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius:
+                BorderRadius.circular(20),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 
@@ -312,7 +352,154 @@ class _DashboardScreenState
                 ],
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 35),
+
+              const Text(
+                "Impact Distribution",
+
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              Container(
+                height: 280,
+                padding:
+                    const EdgeInsets.all(20),
+
+                decoration: BoxDecoration(
+                  color:
+                      const Color(0xFF11212D),
+
+                  borderRadius:
+                      BorderRadius.circular(25),
+
+                  border: Border.all(
+                    color: Colors.greenAccent
+                        .withOpacity(0.2),
+                  ),
+                ),
+
+                child: Column(
+                  children: [
+
+                    Expanded(
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 4,
+                          centerSpaceRadius: 55,
+
+                          sections: [
+
+                            PieChartSectionData(
+                              value:
+                                  highImpact.toDouble(),
+
+                              color:
+                                  Colors.redAccent,
+
+                              radius: 60,
+
+                              title:
+                                  totalImpact == 0
+                                      ? '0%'
+                                      : '${((highImpact / totalImpact) * 100).toStringAsFixed(1)}%',
+
+                              titleStyle:
+                                  const TextStyle(
+                                color: Colors.white,
+                                fontWeight:
+                                    FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+
+                            PieChartSectionData(
+                              value:
+                                  mediumImpact.toDouble(),
+
+                              color:
+                                  Colors.orangeAccent,
+
+                              radius: 60,
+
+                              title:
+                                  totalImpact == 0
+                                      ? '0%'
+                                      : '${((mediumImpact / totalImpact) * 100).toStringAsFixed(1)}%',
+
+                              titleStyle:
+                                  const TextStyle(
+                                color: Colors.white,
+                                fontWeight:
+                                    FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+
+                            PieChartSectionData(
+                              value:
+                                  lowImpact.toDouble(),
+
+                              color:
+                                  Colors.greenAccent,
+
+                              radius: 60,
+
+                              title:
+                                  totalImpact == 0
+                                      ? '0%'
+                                      : '${((lowImpact / totalImpact) * 100).toStringAsFixed(1)}%',
+
+                              titleStyle:
+                                  const TextStyle(
+                                color: Colors.black,
+                                fontWeight:
+                                    FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .spaceEvenly,
+
+                      children: [
+
+                        buildLegend(
+                          color: Colors.redAccent,
+                          text: "High",
+                        ),
+
+                        buildLegend(
+                          color:
+                              Colors.orangeAccent,
+                          text: "Medium",
+                        ),
+
+                        buildLegend(
+                          color:
+                              Colors.greenAccent,
+                          text: "Low",
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 35),
 
               const Text(
                 "Recent Reports",

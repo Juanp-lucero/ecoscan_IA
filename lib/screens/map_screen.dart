@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../utils/app_strings.dart';
+
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -18,23 +20,33 @@ class _MapScreenState extends State<MapScreen> {
 
   bool isLoading = true;
 
-  final Set<Marker> markers = {
-    const Marker(
-      markerId: MarkerId('zone1'),
-      position: LatLng(6.2500, -75.5700),
-      infoWindow: InfoWindow(
-        title: 'High Pollution Area',
-      ),
-    ),
+  Set<Marker> get markers => {
+        Marker(
+          markerId: const MarkerId('zone1'),
 
-    const Marker(
-      markerId: MarkerId('zone2'),
-      position: LatLng(6.2400, -75.5900),
-      infoWindow: InfoWindow(
-        title: 'Plastic Waste Detected',
-      ),
-    ),
-  };
+          position: const LatLng(
+            6.2500,
+            -75.5700,
+          ),
+
+          infoWindow: InfoWindow(
+            title: AppStrings.highPollutionArea,
+          ),
+        ),
+
+        Marker(
+          markerId: const MarkerId('zone2'),
+
+          position: const LatLng(
+            6.2400,
+            -75.5900,
+          ),
+
+          infoWindow: InfoWindow(
+            title: AppStrings.plasticWasteDetected,
+          ),
+        ),
+      };
 
   @override
   void initState() {
@@ -59,10 +71,12 @@ class _MapScreenState extends State<MapScreen> {
         await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
+      permission =
+          await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.deniedForever) {
+    if (permission ==
+        LocationPermission.deniedForever) {
       setState(() {
         isLoading = false;
       });
@@ -99,7 +113,8 @@ class _MapScreenState extends State<MapScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: CameraPosition(
+            initialCameraPosition:
+                CameraPosition(
               target: currentPosition,
               zoom: 14,
             ),
@@ -118,36 +133,46 @@ class _MapScreenState extends State<MapScreen> {
             right: 20,
 
             child: Container(
-              padding: const EdgeInsets.all(18),
+              padding:
+                  const EdgeInsets.all(18),
 
               decoration: BoxDecoration(
-                color: const Color(0xFF11212D),
-                borderRadius: BorderRadius.circular(18),
+                color:
+                    const Color(0xFF11212D),
+
+                borderRadius:
+                    BorderRadius.circular(
+                  18,
+                ),
 
                 border: Border.all(
-                  color: Colors.greenAccent.withOpacity(0.3),
+                  color: Colors.greenAccent
+                      .withOpacity(0.3),
                 ),
               ),
 
-              child: const Column(
+              child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
 
                 children: [
                   Text(
-                    "Environmental Hotspots",
-                    style: TextStyle(
+                    AppStrings.environmentalHotspots,
+
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
 
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
 
                   Text(
-                    "Monitor high-impact pollution zones in real time.",
-                    style: TextStyle(
+                    AppStrings.hotspotDescription,
+
+                    style: const TextStyle(
                       color: Colors.white70,
                     ),
                   ),

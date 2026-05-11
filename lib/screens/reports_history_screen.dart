@@ -23,13 +23,22 @@ class _ReportsHistoryScreenState
 
   String selectedImpact = 'All';
 
-  String selectedOrder = 'Latest';
+  String selectedOrder = 'Newest';
 
   @override
   void initState() {
     super.initState();
 
     loadReports();
+
+    searchController.addListener(applyFilters);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+
+    super.dispose();
   }
 
   Future<void> loadReports() async {
@@ -39,11 +48,12 @@ class _ReportsHistoryScreenState
 
       setState(() {
         reports = data;
-
         filteredReports = data;
 
         isLoading = false;
       });
+
+      applyFilters();
     } catch (e) {
       print(e);
 
@@ -53,23 +63,17 @@ class _ReportsHistoryScreenState
     }
   }
 
-  void filterReports() {
+  void applyFilters() {
     List<Map<String, dynamic>> tempReports =
         List.from(reports);
 
-    final query =
+    final search =
         searchController.text.toLowerCase();
 
-    if (query.isNotEmpty) {
+    if (search.isNotEmpty) {
       tempReports = tempReports.where((report) {
-
         final type =
             (report['type'] ?? '')
-                .toString()
-                .toLowerCase();
-
-        final impact =
-            (report['impact'] ?? '')
                 .toString()
                 .toLowerCase();
 
@@ -78,16 +82,13 @@ class _ReportsHistoryScreenState
                 .toString()
                 .toLowerCase();
 
-        return type.contains(query) ||
-            impact.contains(query) ||
-            description.contains(query);
-
+        return type.contains(search) ||
+            description.contains(search);
       }).toList();
     }
 
     if (selectedImpact != 'All') {
       tempReports = tempReports.where((report) {
-
         final impact =
             (report['impact'] ?? '')
                 .toString()
@@ -96,25 +97,19 @@ class _ReportsHistoryScreenState
         return impact.contains(
           selectedImpact.toLowerCase(),
         );
-
       }).toList();
     }
 
     tempReports.sort((a, b) {
-
       final dateA =
-          DateTime.tryParse(
-            a['created_at'] ?? '',
-          ) ??
-          DateTime.now();
+          DateTime.tryParse(a['created_at'] ?? '') ??
+              DateTime.now();
 
       final dateB =
-          DateTime.tryParse(
-            b['created_at'] ?? '',
-          ) ??
-          DateTime.now();
+          DateTime.tryParse(b['created_at'] ?? '') ??
+              DateTime.now();
 
-      if (selectedOrder == 'Latest') {
+      if (selectedOrder == 'Newest') {
         return dateB.compareTo(dateA);
       }
 
@@ -154,6 +149,169 @@ class _ReportsHistoryScreenState
     return Icons.eco_rounded;
   }
 
+  Widget buildSearchAndFilters() {
+    return Column(
+      children: [
+        TextField(
+          controller: searchController,
+
+          style: const TextStyle(
+            color: Colors.white,
+          ),
+
+          decoration: InputDecoration(
+            hintText: 'Search reports...',
+            hintStyle: const TextStyle(
+              color: Colors.white38,
+            ),
+
+            prefixIcon: const Icon(
+              Icons.search,
+              color: Colors.greenAccent,
+            ),
+
+            filled: true,
+
+            fillColor: const Color(0xFF11212D),
+
+            border: OutlineInputBorder(
+              borderRadius:
+                  BorderRadius.circular(18),
+
+              borderSide: BorderSide.none,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ),
+
+                decoration: BoxDecoration(
+                  color: const Color(0xFF11212D),
+
+                  borderRadius:
+                      BorderRadius.circular(18),
+                ),
+
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedImpact,
+
+                    dropdownColor:
+                        const Color(0xFF11212D),
+
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+
+                    iconEnabledColor:
+                        Colors.greenAccent,
+
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'All',
+                        child: Text('All Impacts'),
+                      ),
+
+                      DropdownMenuItem(
+                        value: 'High',
+                        child: Text('High'),
+                      ),
+
+                      DropdownMenuItem(
+                        value: 'Medium',
+                        child: Text('Medium'),
+                      ),
+
+                      DropdownMenuItem(
+                        value: 'Low',
+                        child: Text('Low'),
+                      ),
+                    ],
+
+                    onChanged: (value) {
+                      if (value == null) return;
+
+                      setState(() {
+                        selectedImpact = value;
+                      });
+
+                      applyFilters();
+                    },
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ),
+
+                decoration: BoxDecoration(
+                  color: const Color(0xFF11212D),
+
+                  borderRadius:
+                      BorderRadius.circular(18),
+                ),
+
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedOrder,
+
+                    dropdownColor:
+                        const Color(0xFF11212D),
+
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+
+                    iconEnabledColor:
+                        Colors.greenAccent,
+
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Newest',
+                        child: Text('Newest'),
+                      ),
+
+                      DropdownMenuItem(
+                        value: 'Oldest',
+                        child: Text('Oldest'),
+                      ),
+                    ],
+
+                    onChanged: (value) {
+                      if (value == null) return;
+
+                      setState(() {
+                        selectedOrder = value;
+                      });
+
+                      applyFilters();
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,215 +336,12 @@ class _ReportsHistoryScreenState
                 color: Colors.greenAccent,
               ),
             )
-
           : Column(
               children: [
-
                 Padding(
                   padding: const EdgeInsets.all(20),
 
-                  child: Column(
-                    children: [
-
-                      TextField(
-                        controller: searchController,
-
-                        onChanged: (value) {
-                          filterReports();
-                        },
-
-                        style: const TextStyle(
-                          color: Colors.white,
-                        ),
-
-                        decoration: InputDecoration(
-                          hintText:
-                              "Search reports...",
-
-                          hintStyle:
-                              const TextStyle(
-                            color: Colors.white38,
-                          ),
-
-                          prefixIcon: const Icon(
-                            Icons.search,
-                            color:
-                                Colors.greenAccent,
-                          ),
-
-                          filled: true,
-
-                          fillColor:
-                              const Color(0xFF11212D),
-
-                          border:
-                              OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              18,
-                            ),
-
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      Row(
-                        children: [
-
-                          Expanded(
-                            child:
-                                DropdownButtonFormField<
-                                    String>(
-                              value:
-                                  selectedImpact,
-
-                              dropdownColor:
-                                  const Color(
-                                0xFF11212D,
-                              ),
-
-                              style:
-                                  const TextStyle(
-                                color: Colors.white,
-                              ),
-
-                              decoration:
-                                  InputDecoration(
-                                filled: true,
-
-                                fillColor:
-                                    const Color(
-                                  0xFF11212D,
-                                ),
-
-                                border:
-                                    OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    18,
-                                  ),
-
-                                  borderSide:
-                                      BorderSide
-                                          .none,
-                                ),
-                              ),
-
-                              items: const [
-
-                                DropdownMenuItem(
-                                  value: 'All',
-                                  child: Text(
-                                    "All Impacts",
-                                  ),
-                                ),
-
-                                DropdownMenuItem(
-                                  value: 'High',
-                                  child: Text(
-                                    "High",
-                                  ),
-                                ),
-
-                                DropdownMenuItem(
-                                  value: 'Medium',
-                                  child: Text(
-                                    "Medium",
-                                  ),
-                                ),
-
-                                DropdownMenuItem(
-                                  value: 'Low',
-                                  child: Text(
-                                    "Low",
-                                  ),
-                                ),
-                              ],
-
-                              onChanged: (value) {
-                                selectedImpact =
-                                    value!;
-
-                                filterReports();
-                              },
-                            ),
-                          ),
-
-                          const SizedBox(width: 14),
-
-                          Expanded(
-                            child:
-                                DropdownButtonFormField<
-                                    String>(
-                              value:
-                                  selectedOrder,
-
-                              dropdownColor:
-                                  const Color(
-                                0xFF11212D,
-                              ),
-
-                              style:
-                                  const TextStyle(
-                                color: Colors.white,
-                              ),
-
-                              decoration:
-                                  InputDecoration(
-                                filled: true,
-
-                                fillColor:
-                                    const Color(
-                                  0xFF11212D,
-                                ),
-
-                                border:
-                                    OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius
-                                          .circular(
-                                    18,
-                                  ),
-
-                                  borderSide:
-                                      BorderSide
-                                          .none,
-                                ),
-                              ),
-
-                              items: const [
-
-                                DropdownMenuItem(
-                                  value: 'Latest',
-                                  child: Text(
-                                    "Latest",
-                                  ),
-                                ),
-
-                                DropdownMenuItem(
-                                  value: 'Oldest',
-                                  child: Text(
-                                    "Oldest",
-                                  ),
-                                ),
-                              ],
-
-                              onChanged: (value) {
-                                selectedOrder =
-                                    value!;
-
-                                filterReports();
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  child: buildSearchAndFilters(),
                 ),
 
                 Expanded(
@@ -395,13 +350,11 @@ class _ReportsHistoryScreenState
                           child: Text(
                             "No reports found",
                             style: TextStyle(
-                              color:
-                                  Colors.white54,
+                              color: Colors.white54,
                               fontSize: 16,
                             ),
                           ),
                         )
-
                       : ListView.builder(
                           padding:
                               const EdgeInsets.symmetric(
@@ -413,14 +366,11 @@ class _ReportsHistoryScreenState
 
                           itemBuilder:
                               (context, index) {
-
                             final report =
-                                filteredReports[
-                                    index];
+                                filteredReports[index];
 
                             final impact =
-                                report['impact'] ??
-                                    '';
+                                report['impact'] ?? '';
 
                             return Container(
                               margin:
@@ -433,9 +383,9 @@ class _ReportsHistoryScreenState
                                 18,
                               ),
 
-                              decoration:
-                                  BoxDecoration(
-                                color: const Color(
+                              decoration: BoxDecoration(
+                                color:
+                                    const Color(
                                   0xFF11212D,
                                 ),
 
@@ -446,17 +396,16 @@ class _ReportsHistoryScreenState
                                 ),
 
                                 border: Border.all(
-                                  color:
-                                      Colors.greenAccent
-                                          .withOpacity(
+                                  color: Colors
+                                      .greenAccent
+                                      .withOpacity(
                                     0.15,
                                   ),
                                 ),
 
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors
-                                        .black
+                                    color: Colors.black
                                         .withOpacity(
                                       0.2,
                                     ),
@@ -472,10 +421,8 @@ class _ReportsHistoryScreenState
                                         .start,
 
                                 children: [
-
                                   Row(
                                     children: [
-
                                       Container(
                                         padding:
                                             const EdgeInsets
@@ -522,7 +469,6 @@ class _ReportsHistoryScreenState
                                                   .start,
 
                                           children: [
-
                                             Text(
                                               report['type'] ??
                                                   'Unknown',
@@ -530,13 +476,15 @@ class _ReportsHistoryScreenState
                                               style:
                                                   const TextStyle(
                                                 color:
-                                                    Colors.white,
+                                                    Colors
+                                                        .white,
 
                                                 fontSize:
                                                     18,
 
                                                 fontWeight:
-                                                    FontWeight.bold,
+                                                    FontWeight
+                                                        .bold,
                                               ),
                                             ),
 
@@ -555,7 +503,8 @@ class _ReportsHistoryScreenState
                                                 ),
 
                                                 fontWeight:
-                                                    FontWeight.w600,
+                                                    FontWeight
+                                                        .w600,
                                               ),
                                             ),
                                           ],
@@ -580,7 +529,8 @@ class _ReportsHistoryScreenState
 
                                     decoration:
                                         BoxDecoration(
-                                      color: Colors.white
+                                      color: Colors
+                                          .white
                                           .withOpacity(
                                         0.03,
                                       ),
@@ -593,14 +543,14 @@ class _ReportsHistoryScreenState
                                     ),
 
                                     child: Text(
-                                      report[
-                                              'description'] ??
+                                      report['description'] ??
                                           '',
 
                                       style:
                                           const TextStyle(
                                         color:
-                                            Colors.white70,
+                                            Colors
+                                                .white70,
 
                                         height: 1.5,
                                       ),
@@ -617,13 +567,13 @@ class _ReportsHistoryScreenState
                                             .end,
 
                                     children: [
-
                                       const Icon(
                                         Icons
                                             .calendar_month,
 
                                         color:
-                                            Colors.white38,
+                                            Colors
+                                                .white38,
 
                                         size: 16,
                                       ),
@@ -643,8 +593,8 @@ class _ReportsHistoryScreenState
 
                                         style:
                                             const TextStyle(
-                                          color:
-                                              Colors.white38,
+                                          color: Colors
+                                              .white38,
                                         ),
                                       ),
                                     ],

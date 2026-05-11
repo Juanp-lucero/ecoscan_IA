@@ -14,7 +14,16 @@ class _ReportsHistoryScreenState
     extends State<ReportsHistoryScreen> {
   List<Map<String, dynamic>> reports = [];
 
+  List<Map<String, dynamic>> filteredReports = [];
+
   bool isLoading = true;
+
+  final TextEditingController searchController =
+      TextEditingController();
+
+  String selectedImpact = 'All';
+
+  String selectedOrder = 'Latest';
 
   @override
   void initState() {
@@ -30,6 +39,9 @@ class _ReportsHistoryScreenState
 
       setState(() {
         reports = data;
+
+        filteredReports = data;
+
         isLoading = false;
       });
     } catch (e) {
@@ -39,6 +51,79 @@ class _ReportsHistoryScreenState
         isLoading = false;
       });
     }
+  }
+
+  void filterReports() {
+    List<Map<String, dynamic>> tempReports =
+        List.from(reports);
+
+    final query =
+        searchController.text.toLowerCase();
+
+    if (query.isNotEmpty) {
+      tempReports = tempReports.where((report) {
+
+        final type =
+            (report['type'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        final impact =
+            (report['impact'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        final description =
+            (report['description'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        return type.contains(query) ||
+            impact.contains(query) ||
+            description.contains(query);
+
+      }).toList();
+    }
+
+    if (selectedImpact != 'All') {
+      tempReports = tempReports.where((report) {
+
+        final impact =
+            (report['impact'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        return impact.contains(
+          selectedImpact.toLowerCase(),
+        );
+
+      }).toList();
+    }
+
+    tempReports.sort((a, b) {
+
+      final dateA =
+          DateTime.tryParse(
+            a['created_at'] ?? '',
+          ) ??
+          DateTime.now();
+
+      final dateB =
+          DateTime.tryParse(
+            b['created_at'] ?? '',
+          ) ??
+          DateTime.now();
+
+      if (selectedOrder == 'Latest') {
+        return dateB.compareTo(dateA);
+      }
+
+      return dateA.compareTo(dateB);
+    });
+
+    setState(() {
+      filteredReports = tempReports;
+    });
   }
 
   Color getImpactColor(String impact) {
@@ -94,192 +179,484 @@ class _ReportsHistoryScreenState
               ),
             )
 
-          : reports.isEmpty
-              ? const Center(
-                  child: Text(
-                    "No reports found",
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 16,
-                    ),
-                  ),
-                )
+          : Column(
+              children: [
 
-              : ListView.builder(
+                Padding(
                   padding: const EdgeInsets.all(20),
 
-                  itemCount: reports.length,
+                  child: Column(
+                    children: [
 
-                  itemBuilder: (context, index) {
-                    final report = reports[index];
+                      TextField(
+                        controller: searchController,
 
-                    final impact =
-                        report['impact'] ?? '';
+                        onChanged: (value) {
+                          filterReports();
+                        },
 
-                    return Container(
-                      margin:
-                          const EdgeInsets.only(bottom: 18),
-
-                      padding: const EdgeInsets.all(18),
-
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF11212D),
-
-                        borderRadius:
-                            BorderRadius.circular(22),
-
-                        border: Border.all(
-                          color: Colors.greenAccent
-                              .withOpacity(0.15),
+                        style: const TextStyle(
+                          color: Colors.white,
                         ),
 
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black
-                                .withOpacity(0.2),
+                        decoration: InputDecoration(
+                          hintText:
+                              "Search reports...",
 
-                            blurRadius: 10,
+                          hintStyle:
+                              const TextStyle(
+                            color: Colors.white38,
                           ),
-                        ],
+
+                          prefixIcon: const Icon(
+                            Icons.search,
+                            color:
+                                Colors.greenAccent,
+                          ),
+
+                          filled: true,
+
+                          fillColor:
+                              const Color(0xFF11212D),
+
+                          border:
+                              OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(
+                              18,
+                            ),
+
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                       ),
 
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                      const SizedBox(height: 16),
 
+                      Row(
                         children: [
 
-                          Row(
-                            children: [
+                          Expanded(
+                            child:
+                                DropdownButtonFormField<
+                                    String>(
+                              value:
+                                  selectedImpact,
 
-                              Container(
-                                padding:
-                                    const EdgeInsets.all(10),
+                              dropdownColor:
+                                  const Color(
+                                0xFF11212D,
+                              ),
 
-                                decoration: BoxDecoration(
-                                  color: getImpactColor(
-                                    impact,
-                                  ).withOpacity(0.15),
+                              style:
+                                  const TextStyle(
+                                color: Colors.white,
+                              ),
 
+                              decoration:
+                                  InputDecoration(
+                                filled: true,
+
+                                fillColor:
+                                    const Color(
+                                  0xFF11212D,
+                                ),
+
+                                border:
+                                    OutlineInputBorder(
                                   borderRadius:
-                                      BorderRadius.circular(
-                                    14,
+                                      BorderRadius
+                                          .circular(
+                                    18,
+                                  ),
+
+                                  borderSide:
+                                      BorderSide
+                                          .none,
+                                ),
+                              ),
+
+                              items: const [
+
+                                DropdownMenuItem(
+                                  value: 'All',
+                                  child: Text(
+                                    "All Impacts",
                                   ),
                                 ),
 
-                                child: Icon(
-                                  getImpactIcon(impact),
-                                  color:
-                                      getImpactColor(impact),
+                                DropdownMenuItem(
+                                  value: 'High',
+                                  child: Text(
+                                    "High",
+                                  ),
                                 ),
-                              ),
 
-                              const SizedBox(width: 14),
-
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment
-                                          .start,
-
-                                  children: [
-
-                                    Text(
-                                      report['type'] ??
-                                          'Unknown',
-
-                                      style:
-                                          const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight:
-                                            FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 4),
-
-                                    Text(
-                                      impact,
-
-                                      style: TextStyle(
-                                        color:
-                                            getImpactColor(
-                                          impact,
-                                        ),
-
-                                        fontWeight:
-                                            FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                                DropdownMenuItem(
+                                  value: 'Medium',
+                                  child: Text(
+                                    "Medium",
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
 
-                          const SizedBox(height: 18),
+                                DropdownMenuItem(
+                                  value: 'Low',
+                                  child: Text(
+                                    "Low",
+                                  ),
+                                ),
+                              ],
 
-                          Container(
-                            width: double.infinity,
+                              onChanged: (value) {
+                                selectedImpact =
+                                    value!;
 
-                            padding:
-                                const EdgeInsets.all(16),
-
-                            decoration: BoxDecoration(
-                              color:
-                                  Colors.white.withOpacity(
-                                0.03,
-                              ),
-
-                              borderRadius:
-                                  BorderRadius.circular(18),
-                            ),
-
-                            child: Text(
-                              report['description'] ??
-                                  '',
-
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                height: 1.5,
-                              ),
+                                filterReports();
+                              },
                             ),
                           ),
 
-                          const SizedBox(height: 14),
+                          const SizedBox(width: 14),
 
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.end,
+                          Expanded(
+                            child:
+                                DropdownButtonFormField<
+                                    String>(
+                              value:
+                                  selectedOrder,
 
-                            children: [
-
-                              const Icon(
-                                Icons.calendar_month,
-                                color: Colors.white38,
-                                size: 16,
+                              dropdownColor:
+                                  const Color(
+                                0xFF11212D,
                               ),
 
-                              const SizedBox(width: 6),
+                              style:
+                                  const TextStyle(
+                                color: Colors.white,
+                              ),
 
-                              Text(
-                                report['created_at']
-                                        ?.toString()
-                                        .substring(0, 10) ??
-                                    '',
+                              decoration:
+                                  InputDecoration(
+                                filled: true,
 
-                                style: const TextStyle(
-                                  color: Colors.white38,
+                                fillColor:
+                                    const Color(
+                                  0xFF11212D,
+                                ),
+
+                                border:
+                                    OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius
+                                          .circular(
+                                    18,
+                                  ),
+
+                                  borderSide:
+                                      BorderSide
+                                          .none,
                                 ),
                               ),
-                            ],
+
+                              items: const [
+
+                                DropdownMenuItem(
+                                  value: 'Latest',
+                                  child: Text(
+                                    "Latest",
+                                  ),
+                                ),
+
+                                DropdownMenuItem(
+                                  value: 'Oldest',
+                                  child: Text(
+                                    "Oldest",
+                                  ),
+                                ),
+                              ],
+
+                              onChanged: (value) {
+                                selectedOrder =
+                                    value!;
+
+                                filterReports();
+                              },
+                            ),
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
+
+                Expanded(
+                  child: filteredReports.isEmpty
+                      ? const Center(
+                          child: Text(
+                            "No reports found",
+                            style: TextStyle(
+                              color:
+                                  Colors.white54,
+                              fontSize: 16,
+                            ),
+                          ),
+                        )
+
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
+
+                          itemCount:
+                              filteredReports.length,
+
+                          itemBuilder:
+                              (context, index) {
+
+                            final report =
+                                filteredReports[
+                                    index];
+
+                            final impact =
+                                report['impact'] ??
+                                    '';
+
+                            return Container(
+                              margin:
+                                  const EdgeInsets.only(
+                                bottom: 18,
+                              ),
+
+                              padding:
+                                  const EdgeInsets.all(
+                                18,
+                              ),
+
+                              decoration:
+                                  BoxDecoration(
+                                color: const Color(
+                                  0xFF11212D,
+                                ),
+
+                                borderRadius:
+                                    BorderRadius
+                                        .circular(
+                                  22,
+                                ),
+
+                                border: Border.all(
+                                  color:
+                                      Colors.greenAccent
+                                          .withOpacity(
+                                    0.15,
+                                  ),
+                                ),
+
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors
+                                        .black
+                                        .withOpacity(
+                                      0.2,
+                                    ),
+
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start,
+
+                                children: [
+
+                                  Row(
+                                    children: [
+
+                                      Container(
+                                        padding:
+                                            const EdgeInsets
+                                                .all(
+                                          10,
+                                        ),
+
+                                        decoration:
+                                            BoxDecoration(
+                                          color:
+                                              getImpactColor(
+                                            impact,
+                                          ).withOpacity(
+                                            0.15,
+                                          ),
+
+                                          borderRadius:
+                                              BorderRadius
+                                                  .circular(
+                                            14,
+                                          ),
+                                        ),
+
+                                        child: Icon(
+                                          getImpactIcon(
+                                            impact,
+                                          ),
+
+                                          color:
+                                              getImpactColor(
+                                            impact,
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(
+                                        width: 14,
+                                      ),
+
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment
+                                                  .start,
+
+                                          children: [
+
+                                            Text(
+                                              report['type'] ??
+                                                  'Unknown',
+
+                                              style:
+                                                  const TextStyle(
+                                                color:
+                                                    Colors.white,
+
+                                                fontSize:
+                                                    18,
+
+                                                fontWeight:
+                                                    FontWeight.bold,
+                                              ),
+                                            ),
+
+                                            const SizedBox(
+                                              height: 4,
+                                            ),
+
+                                            Text(
+                                              impact,
+
+                                              style:
+                                                  TextStyle(
+                                                color:
+                                                    getImpactColor(
+                                                  impact,
+                                                ),
+
+                                                fontWeight:
+                                                    FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  const SizedBox(
+                                    height: 18,
+                                  ),
+
+                                  Container(
+                                    width:
+                                        double.infinity,
+
+                                    padding:
+                                        const EdgeInsets
+                                            .all(
+                                      16,
+                                    ),
+
+                                    decoration:
+                                        BoxDecoration(
+                                      color: Colors.white
+                                          .withOpacity(
+                                        0.03,
+                                      ),
+
+                                      borderRadius:
+                                          BorderRadius
+                                              .circular(
+                                        18,
+                                      ),
+                                    ),
+
+                                    child: Text(
+                                      report[
+                                              'description'] ??
+                                          '',
+
+                                      style:
+                                          const TextStyle(
+                                        color:
+                                            Colors.white70,
+
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(
+                                    height: 14,
+                                  ),
+
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment
+                                            .end,
+
+                                    children: [
+
+                                      const Icon(
+                                        Icons
+                                            .calendar_month,
+
+                                        color:
+                                            Colors.white38,
+
+                                        size: 16,
+                                      ),
+
+                                      const SizedBox(
+                                        width: 6,
+                                      ),
+
+                                      Text(
+                                        report['created_at']
+                                                ?.toString()
+                                                .substring(
+                                                  0,
+                                                  10,
+                                                ) ??
+                                            '',
+
+                                        style:
+                                            const TextStyle(
+                                          color:
+                                              Colors.white38,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

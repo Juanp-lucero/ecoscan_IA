@@ -35,6 +35,32 @@ class SupabaseService {
     }
   }
 
+  Future<void> deleteReport(dynamic id) async {
+    try {
+      final response = await client
+          .from('reports')
+          .delete()
+          .eq('id', id)
+          .select();
+
+      print("DELETE RESPONSE:");
+      print(response);
+
+      if (response.isEmpty) {
+        throw Exception(
+          "No se eliminó ningún reporte",
+        );
+      }
+
+      print("REPORT DELETED SUCCESSFULLY");
+    } catch (e) {
+      print("ERROR DELETING REPORT:");
+      print(e);
+
+      rethrow;
+    }
+  }
+
   Future<List<Map<String, dynamic>>>
       getReports() async {
     try {

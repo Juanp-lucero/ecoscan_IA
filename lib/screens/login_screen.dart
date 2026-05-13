@@ -102,7 +102,6 @@ class _LoginScreenState
           content: Text(
             e.toString(),
           ),
-
           backgroundColor:
               Colors.redAccent,
         ),
@@ -119,7 +118,6 @@ class _LoginScreenState
     return Scaffold(
       body: Container(
         width: double.infinity,
-
         height: double.infinity,
 
         decoration: const BoxDecoration(
@@ -129,7 +127,6 @@ class _LoginScreenState
               Color(0xFF203A43),
               Color(0xFF2C5364),
             ],
-
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -171,6 +168,7 @@ class _LoginScreenState
                     height: 30,
                   ),
 
+                  // EMAIL
                   TextFormField(
                     controller:
                         emailController,
@@ -220,8 +218,8 @@ class _LoginScreenState
 
                         borderSide:
                             const BorderSide(
-                          color: Colors
-                              .greenAccent,
+                          color:
+                              Colors.greenAccent,
                         ),
                       ),
                     ),
@@ -234,6 +232,7 @@ class _LoginScreenState
                     height: 15,
                   ),
 
+                  // PASSWORD
                   TextFormField(
                     controller:
                         passwordController,
@@ -285,8 +284,8 @@ class _LoginScreenState
 
                         borderSide:
                             const BorderSide(
-                          color: Colors
-                              .greenAccent,
+                          color:
+                              Colors.greenAccent,
                         ),
                       ),
                     ),
@@ -303,13 +302,15 @@ class _LoginScreenState
                     width: double.infinity,
 
                     child: ElevatedButton(
-                      onPressed: _submit,
+                      onPressed:
+                          isLoading
+                              ? null
+                              : _submit,
 
                       style:
                           ElevatedButton.styleFrom(
                         padding:
-                            const EdgeInsets
-                                .symmetrical(
+                            EdgeInsets.symmetric(
                           vertical: 15,
                         ),
 
@@ -330,7 +331,15 @@ class _LoginScreenState
                       ),
 
                       child: isLoading
-                          ? const CircularProgressIndicator()
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: Colors.black,
+                              ),
+                            )
                           : Text(
                               isLogin
                                   ? AppStrings

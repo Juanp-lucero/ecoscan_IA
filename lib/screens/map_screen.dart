@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../services/supabase_service.dart';
 import '../utils/app_strings.dart';
 
 class MapScreen extends StatefulWidget {
@@ -20,39 +21,18 @@ class _MapScreenState extends State<MapScreen> {
 
   bool isLoading = true;
 
-  Set<Marker> get markers => {
-        Marker(
-          markerId: const MarkerId('zone1'),
-
-          position: const LatLng(
-            6.2500,
-            -75.5700,
-          ),
-
-          infoWindow: InfoWindow(
-            title: AppStrings.highPollutionArea,
-          ),
-        ),
-
-        Marker(
-          markerId: const MarkerId('zone2'),
-
-          position: const LatLng(
-            6.2400,
-            -75.5900,
-          ),
-
-          infoWindow: InfoWindow(
-            title: AppStrings.plasticWasteDetected,
-          ),
-        ),
-      };
+  Set<Marker> markers = {};
+  Set<Circle> hotspotCircles = {};
 
   @override
   void initState() {
     super.initState();
+    initializeMap();
+  }
 
-    getCurrentLocation();
+  Future<void> initializeMap() async {
+    await getCurrentLocation();
+    await loadReportsMarkers();
   }
 
   Future<void> getCurrentLocation() async {
@@ -63,7 +43,6 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         isLoading = false;
       });
-
       return;
     }
 
@@ -80,7 +59,6 @@ class _MapScreenState extends State<MapScreen> {
       setState(() {
         isLoading = false;
       });
-
       return;
     }
 
@@ -92,38 +70,139 @@ class _MapScreenState extends State<MapScreen> {
         position.latitude,
         position.longitude,
       );
-
-      isLoading = false;
     });
+  }
+
+  Future<void> loadReportsMarkers() async {
+    try {
+      final reports =
+          await SupabaseService().getReports();
+
+      final Set<Marker> loadedMarkers = {};
+      final Set<Circle> loadedCircles = {};
+
+      for (var report in reports) {
+        final latitude = report['latitude'];
+        final longitude = report['longitude'];
+
+        if (latitude == null || longitude == null) {
+          continue;
+        }
+
+        final double lat =
+            double.parse(latitude.toString());
+
+        final double lng =
+            double.parse(longitude.toString());
+
+        final impact =
+            (report['impact'] ?? '')
+                .toString()
+                .toLowerCase();
+
+        BitmapDescriptor markerColor =
+            BitmapDescriptor.defaultMarker;
+
+        Color circleColor = Colors.greenAccent;
+        double circleRadius = 90;
+
+        if (impact.contains('high')) {
+          markerColor =
+              BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueRed,
+          );
+
+          circleColor = Colors.redAccent;
+          circleRadius = 220;
+        } else if (impact.contains('medium')) {
+          markerColor =
+              BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueOrange,
+          );
+
+          circleColor = Colors.orangeAccent;
+          circleRadius = 150;
+        } else {
+          markerColor =
+              BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          );
+
+          circleColor = Colors.greenAccent;
+          circleRadius = 90;
+        }
+
+        final reportId =
+            report['id']?.toString() ??
+                DateTime.now()
+                    .millisecondsSinceEpoch
+                    .toString();
+
+        loadedMarkers.add(
+          Marker(
+            markerId: MarkerId(reportId),
+            position: LatLng(lat, lng),
+            icon: markerColor,
+            infoWindow: InfoWindow(
+              title: report['type'] ?? 'Unknown',
+              snippet: report['impact'] ?? '',
+            ),
+          ),
+        );
+
+        loadedCircles.add(
+          Circle(
+            circleId: CircleId('circle_$reportId'),
+            center: LatLng(lat, lng),
+            radius: circleRadius,
+            fillColor: circleColor.withOpacity(0.25),
+            strokeColor: circleColor.withOpacity(0.7),
+            strokeWidth: 2,
+          ),
+        );
+      }
+
+      setState(() {
+        markers = loadedMarkers;
+        hotspotCircles = loadedCircles;
+        isLoading = false;
+      });
+    } catch (e) {
+      print("ERROR LOADING MAP DATA:");
+      print(e);
+
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: Colors.greenAccent,
+      return const Scaffold(
+        backgroundColor: Color(0xFF07111A),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: Colors.greenAccent,
+          ),
         ),
       );
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
-
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition:
-                CameraPosition(
+            initialCameraPosition: CameraPosition(
               target: currentPosition,
               zoom: 14,
             ),
-
             markers: markers,
-
+            circles: hotspotCircles,
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
-
             zoomControlsEnabled: false,
           ),
 
@@ -131,47 +210,30 @@ class _MapScreenState extends State<MapScreen> {
             top: 20,
             left: 20,
             right: 20,
-
             child: Container(
-              padding:
-                  const EdgeInsets.all(18),
-
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color:
-                    const Color(0xFF11212D),
-
-                borderRadius:
-                    BorderRadius.circular(
-                  18,
-                ),
-
+                color: const Color(0xFF11212D),
+                borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: Colors.greenAccent
-                      .withOpacity(0.3),
+                  color: Colors.greenAccent.withOpacity(0.3),
                 ),
               ),
-
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
-
                 children: [
                   Text(
                     AppStrings.environmentalHotspots,
-
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     AppStrings.hotspotDescription,
-
                     style: const TextStyle(
                       color: Colors.white70,
                     ),

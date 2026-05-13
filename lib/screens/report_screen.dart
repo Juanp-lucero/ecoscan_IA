@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../services/ai_service.dart';
 import '../services/supabase_service.dart';
@@ -20,8 +21,14 @@ class _ReportScreenState extends State<ReportScreen> {
   String? detectedType;
   String? impact;
   String? description;
+  String? recyclingRecommendation;
+  String? toxicityLevel;
+  String? ecoAction;
 
   bool isLoading = false;
+
+  double? latitude;
+  double? longitude;
 
   final ImagePicker picker = ImagePicker();
 
@@ -35,11 +42,32 @@ class _ReportScreenState extends State<ReportScreen> {
 
     setState(() {
       selectedImage = File(pickedFile.path);
-
       detectedType = null;
       impact = null;
       description = null;
+      recyclingRecommendation = null;
+      toxicityLevel = null;
+      ecoAction = null;
     });
+  }
+
+  Future<void> getCurrentLocation() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) return;
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) return;
+
+    final position = await Geolocator.getCurrentPosition();
+
+    latitude = position.latitude;
+    longitude = position.longitude;
   }
 
   Future<void> analyzeImage() async {
@@ -50,33 +78,23 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      print("STARTING AI ANALYSIS");
-
-      final result =
-          await AIService().analyzeImage(selectedImage!);
-
-      print("AI RESULT:");
-      print(result.type);
-      print(result.impact);
-      print(result.description);
+      final result = await AIService().analyzeImage(selectedImage!);
 
       setState(() {
         detectedType = result.type;
         impact = result.impact;
         description = result.description;
+        recyclingRecommendation = result.recyclingRecommendation;
+        toxicityLevel = result.toxicityLevel;
+        ecoAction = result.ecoAction;
       });
     } catch (error) {
-      print("AI ERROR:");
-      print(error);
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.redAccent,
-          content: Text(
-            "AI Error: $error",
-          ),
+          content: Text("AI Error: $error"),
         ),
       );
     } finally {
@@ -89,7 +107,10 @@ class _ReportScreenState extends State<ReportScreen> {
   Future<void> saveReport() async {
     if (detectedType == null ||
         impact == null ||
-        description == null) {
+        description == null ||
+        recyclingRecommendation == null ||
+        toxicityLevel == null ||
+        ecoAction == null) {
       return;
     }
 
@@ -98,36 +119,34 @@ class _ReportScreenState extends State<ReportScreen> {
         isLoading = true;
       });
 
+      await getCurrentLocation();
+
       await SupabaseService().insertReport(
         type: detectedType!,
         impact: impact!,
         description: description!,
+        recyclingRecommendation: recyclingRecommendation!,
+        toxicityLevel: toxicityLevel!,
+        ecoAction: ecoAction!,
+        latitude: latitude,
+        longitude: longitude,
       );
-
-      print("REPORT INSERT COMPLETED");
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green,
-          content: Text(
-            AppStrings.reportSaved,
-          ),
+          content: Text(AppStrings.reportSaved),
         ),
       );
     } catch (e) {
-      print("SAVE ERROR:");
-      print(e);
-
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text(
-            "Error guardando reporte: $e",
-          ),
+          content: Text("Error guardando reporte: $e"),
         ),
       );
     } finally {
@@ -160,8 +179,7 @@ class _ReportScreenState extends State<ReportScreen> {
         ],
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
@@ -170,9 +188,7 @@ class _ReportScreenState extends State<ReportScreen> {
               fontSize: 14,
             ),
           ),
-
           const SizedBox(height: 10),
-
           Text(
             value,
             style: TextStyle(
@@ -190,17 +206,14 @@ class _ReportScreenState extends State<ReportScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF07111A),
-
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
-
           children: [
             const SizedBox(height: 10),
 
             Text(
               AppStrings.aiEnvironmentalAnalysis,
-
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 28,
@@ -212,7 +225,6 @@ class _ReportScreenState extends State<ReportScreen> {
 
             Text(
               AppStrings.analyzeEnvironmentalWaste,
-
               style: const TextStyle(
                 color: Colors.white54,
               ),
@@ -222,70 +234,43 @@ class _ReportScreenState extends State<ReportScreen> {
 
             Container(
               height: 320,
-
               decoration: BoxDecoration(
                 color: const Color(0xFF11212D),
-
-                borderRadius:
-                    BorderRadius.circular(25),
-
+                borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: Colors.greenAccent
-                      .withOpacity(0.4),
-
+                  color: Colors.greenAccent.withOpacity(0.4),
                   width: 2,
                 ),
-
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.greenAccent
-                        .withOpacity(0.15),
-
+                    color: Colors.greenAccent.withOpacity(0.15),
                     blurRadius: 25,
                   ),
                 ],
               ),
-
               child: selectedImage == null
                   ? Center(
                       child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center,
-
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(
                             Icons.camera_alt,
-                            color:
-                                Colors.greenAccent,
+                            color: Colors.greenAccent,
                             size: 70,
                           ),
-
-                          const SizedBox(
-                            height: 15,
-                          ),
-
+                          const SizedBox(height: 15),
                           Text(
-                            AppStrings
-                                .noImageSelected,
-
-                            style:
-                                const TextStyle(
-                              color:
-                                  Colors.white54,
-
+                            AppStrings.noImageSelected,
+                            style: const TextStyle(
+                              color: Colors.white54,
                               fontSize: 16,
                             ),
                           ),
                         ],
                       ),
                     )
-
                   : ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(
-                        25,
-                      ),
-
+                      borderRadius: BorderRadius.circular(25),
                       child: Image.file(
                         selectedImage!,
                         fit: BoxFit.cover,
@@ -297,38 +282,21 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
-
               child: ElevatedButton.icon(
                 onPressed: pickImage,
-
-                icon: const Icon(
-                  Icons.camera_alt,
-                ),
-
+                icon: const Icon(Icons.camera_alt),
                 label: Text(
                   AppStrings.captureImage,
-
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.greenAccent,
-
-                  foregroundColor:
-                      Colors.black,
-
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      18,
-                    ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.greenAccent,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
                   ),
                 ),
               ),
@@ -338,56 +306,30 @@ class _ReportScreenState extends State<ReportScreen> {
 
             SizedBox(
               height: 58,
-
               child: ElevatedButton.icon(
-                onPressed:
-                    isLoading
-                        ? null
-                        : analyzeImage,
-
-                icon: const Icon(
-                  Icons.auto_awesome,
-                ),
-
+                onPressed: isLoading ? null : analyzeImage,
+                icon: const Icon(Icons.auto_awesome),
                 label: isLoading
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-
-                        child:
-                            CircularProgressIndicator(
+                        child: CircularProgressIndicator(
                           color: Colors.black,
                           strokeWidth: 3,
                         ),
                       )
-
                     : Text(
                         AppStrings.analyze,
-
-                        style:
-                            const TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      const Color(
-                    0xFF1BE68C,
-                  ),
-
-                  foregroundColor:
-                      Colors.black,
-
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      18,
-                    ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1BE68C),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
                   ),
                 ),
               ),
@@ -398,61 +340,30 @@ class _ReportScreenState extends State<ReportScreen> {
             if (detectedType != null)
               SizedBox(
                 height: 58,
-
-                child:
-                    ElevatedButton.icon(
-                  onPressed:
-                      isLoading
-                          ? null
-                          : saveReport,
-
-                  icon: const Icon(
-                    Icons.save,
-                  ),
-
+                child: ElevatedButton.icon(
+                  onPressed: isLoading ? null : saveReport,
+                  icon: const Icon(Icons.save),
                   label: isLoading
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-
-                          child:
-                              CircularProgressIndicator(
-                            color:
-                                Colors.black,
-
+                          child: CircularProgressIndicator(
+                            color: Colors.black,
                             strokeWidth: 3,
                           ),
                         )
-
                       : Text(
-                          AppStrings
-                              .saveReport,
-
-                          style:
-                              const TextStyle(
+                          AppStrings.saveReport,
+                          style: const TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                FontWeight
-                                    .bold,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
-                  style:
-                      ElevatedButton
-                          .styleFrom(
-                    backgroundColor:
-                        Colors.orangeAccent,
-
-                    foregroundColor:
-                        Colors.black,
-
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius
-                              .circular(
-                        18,
-                      ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orangeAccent,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                 ),
@@ -462,32 +373,34 @@ class _ReportScreenState extends State<ReportScreen> {
 
             if (detectedType != null) ...[
               buildInfoCard(
-                title:
-                    AppStrings.detectedWaste,
-
+                title: AppStrings.detectedWaste,
                 value: detectedType!,
-
                 valueColor: Colors.white,
               ),
-
               buildInfoCard(
-                title: AppStrings
-                    .environmentalImpact,
-
+                title: AppStrings.environmentalImpact,
                 value: impact!,
-
-                valueColor:
-                    Colors.orangeAccent,
+                valueColor: Colors.orangeAccent,
               ),
-
               buildInfoCard(
-                title:
-                    AppStrings.aiDescription,
-
+                title: AppStrings.aiDescription,
                 value: description!,
-
-                valueColor:
-                    Colors.white70,
+                valueColor: Colors.white70,
+              ),
+              buildInfoCard(
+                title: "Recycling recommendation",
+                value: recyclingRecommendation!,
+                valueColor: Colors.greenAccent,
+              ),
+              buildInfoCard(
+                title: "Toxicity level",
+                value: toxicityLevel!,
+                valueColor: Colors.redAccent,
+              ),
+              buildInfoCard(
+                title: "Suggested eco action",
+                value: ecoAction!,
+                valueColor: Colors.lightBlueAccent,
               ),
             ],
           ],

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../services/supabase_service.dart';
 
 class ReportDetailScreen extends StatelessWidget {
   final Map<String, dynamic> report;
@@ -34,6 +37,146 @@ class ReportDetailScreen extends StatelessWidget {
     }
 
     return Icons.eco_rounded;
+  }
+
+  Future<void> openLocation(BuildContext context) async {
+    final latitude = report['latitude'];
+    final longitude = report['longitude'];
+
+    if (latitude == null || longitude == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Location not available'),
+        ),
+      );
+
+      return;
+    }
+
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+    );
+
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    )) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Could not open location'),
+        ),
+      );
+    }
+  }
+
+  Future<void> confirmDelete(BuildContext context) async {
+    final id = report['id'];
+
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Invalid report ID'),
+        ),
+      );
+
+      return;
+    }
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF11212D),
+          title: const Text(
+            'Delete report',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            'Are you sure you want to delete this report?',
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, false);
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext, true);
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await SupabaseService().deleteReport(id);
+
+      if (!context.mounted) return;
+
+      Navigator.pop(context, true);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Text('Report deleted successfully'),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.redAccent,
+          content: Text('Error deleting report: $e'),
+        ),
+      );
+    }
+  }
+
+  Widget buildActionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      height: 52,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget buildDetailCard({
@@ -181,6 +324,34 @@ class ReportDetailScreen extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(
+                child: buildActionButton(
+                  label: 'Open location',
+                  icon: Icons.location_on_rounded,
+                  color: Colors.greenAccent,
+                  onPressed: () {
+                    openLocation(context);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildActionButton(
+                  label: 'Delete',
+                  icon: Icons.delete_rounded,
+                  color: Colors.redAccent,
+                  onPressed: () {
+                    confirmDelete(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+
           const SizedBox(height: 24),
 
           buildDetailCard(
@@ -189,35 +360,30 @@ class ReportDetailScreen extends StatelessWidget {
             icon: Icons.description_rounded,
             color: Colors.white70,
           ),
-
           buildDetailCard(
             title: 'Toxicity level',
             value: toxicity,
             icon: Icons.dangerous_rounded,
             color: Colors.redAccent,
           ),
-
           buildDetailCard(
             title: 'Recycling recommendation',
             value: recycling,
             icon: Icons.recycling_rounded,
             color: Colors.greenAccent,
           ),
-
           buildDetailCard(
             title: 'Suggested eco action',
             value: ecoAction,
             icon: Icons.task_alt_rounded,
             color: Colors.lightBlueAccent,
           ),
-
           buildDetailCard(
             title: 'Location',
             value: 'Latitude: $latitude\nLongitude: $longitude',
             icon: Icons.location_on_rounded,
             color: Colors.orangeAccent,
           ),
-
           buildDetailCard(
             title: 'Date',
             value: date,

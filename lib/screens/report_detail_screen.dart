@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../services/supabase_service.dart';
+import 'report_edit_screen.dart';
 
 class ReportDetailScreen extends StatelessWidget {
   final Map<String, dynamic> report;
@@ -70,6 +71,21 @@ class ReportDetailScreen extends StatelessWidget {
           content: Text('Could not open location'),
         ),
       );
+    }
+  }
+
+  Future<void> openEditScreen(BuildContext context) async {
+    final wasUpdated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ReportEditScreen(
+          report: report,
+        ),
+      ),
+    );
+
+    if (wasUpdated == true && context.mounted) {
+      Navigator.pop(context, true);
     }
   }
 
@@ -330,6 +346,17 @@ class ReportDetailScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: buildActionButton(
+                  label: 'Edit',
+                  icon: Icons.edit_rounded,
+                  color: Colors.lightBlueAccent,
+                  onPressed: () {
+                    openEditScreen(context);
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildActionButton(
                   label: 'Open location',
                   icon: Icons.location_on_rounded,
                   color: Colors.greenAccent,
@@ -338,18 +365,18 @@ class ReportDetailScreen extends StatelessWidget {
                   },
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: buildActionButton(
-                  label: 'Delete',
-                  icon: Icons.delete_rounded,
-                  color: Colors.redAccent,
-                  onPressed: () {
-                    confirmDelete(context);
-                  },
-                ),
-              ),
             ],
+          ),
+
+          const SizedBox(height: 12),
+
+          buildActionButton(
+            label: 'Delete report',
+            icon: Icons.delete_rounded,
+            color: Colors.redAccent,
+            onPressed: () {
+              confirmDelete(context);
+            },
           ),
 
           const SizedBox(height: 24),

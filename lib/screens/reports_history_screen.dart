@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../services/pdf_service.dart';
 import '../services/supabase_service.dart';
-
 import '../utils/app_strings.dart';
 
 import 'report_detail_screen.dart';
@@ -19,13 +18,11 @@ class _ReportsHistoryScreenState
     extends State<ReportsHistoryScreen> {
   List<Map<String, dynamic>> reports = [];
 
-  List<Map<String, dynamic>>
-      filteredReports = [];
+  List<Map<String, dynamic>> filteredReports = [];
 
   bool isLoading = true;
 
-  final TextEditingController
-      searchController =
+  final TextEditingController searchController =
       TextEditingController();
 
   String selectedImpact = 'All';
@@ -53,14 +50,11 @@ class _ReportsHistoryScreenState
   Future<void> loadReports() async {
     try {
       final data =
-          await SupabaseService()
-              .getReports();
+          await SupabaseService().getReports();
 
       setState(() {
         reports = data;
-
         filteredReports = data;
-
         isLoading = false;
       });
 
@@ -75,20 +69,17 @@ class _ReportsHistoryScreenState
   }
 
   void applyFilters() {
-    List<Map<String, dynamic>>
-        tempReports = List.from(reports);
+    List<Map<String, dynamic>> tempReports =
+        List.from(reports);
 
     final search =
         searchController.text.toLowerCase();
 
     if (search.isNotEmpty) {
-      tempReports = tempReports.where((
-        report,
-      ) {
-        final type =
-            (report['type'] ?? '')
-                .toString()
-                .toLowerCase();
+      tempReports = tempReports.where((report) {
+        final type = (report['type'] ?? '')
+            .toString()
+            .toLowerCase();
 
         final description =
             (report['description'] ?? '')
@@ -101,13 +92,10 @@ class _ReportsHistoryScreenState
     }
 
     if (selectedImpact != 'All') {
-      tempReports = tempReports.where((
-        report,
-      ) {
-        final impact =
-            (report['impact'] ?? '')
-                .toString()
-                .toLowerCase();
+      tempReports = tempReports.where((report) {
+        final impact = (report['impact'] ?? '')
+            .toString()
+            .toLowerCase();
 
         return impact.contains(
           selectedImpact.toLowerCase(),
@@ -116,15 +104,13 @@ class _ReportsHistoryScreenState
     }
 
     tempReports.sort((a, b) {
-      final dateA = DateTime.tryParse(
-            a['created_at'] ?? '',
-          ) ??
-          DateTime.now();
+      final dateA =
+          DateTime.tryParse(a['created_at'] ?? '') ??
+              DateTime.now();
 
-      final dateB = DateTime.tryParse(
-            b['created_at'] ?? '',
-          ) ??
-          DateTime.now();
+      final dateB =
+          DateTime.tryParse(b['created_at'] ?? '') ??
+              DateTime.now();
 
       if (selectedOrder == 'Newest') {
         return dateB.compareTo(dateA);
@@ -138,9 +124,7 @@ class _ReportsHistoryScreenState
     });
   }
 
-  Color getImpactColor(
-    String impact,
-  ) {
+  Color getImpactColor(String impact) {
     final value = impact.toLowerCase();
 
     if (value.contains('high')) {
@@ -154,9 +138,7 @@ class _ReportsHistoryScreenState
     return Colors.greenAccent;
   }
 
-  IconData getImpactIcon(
-    String impact,
-  ) {
+  IconData getImpactIcon(String impact) {
     final value = impact.toLowerCase();
 
     if (value.contains('high')) {
@@ -175,35 +157,23 @@ class _ReportsHistoryScreenState
       children: [
         TextField(
           controller: searchController,
-
           style: const TextStyle(
             color: Colors.white,
           ),
-
           decoration: InputDecoration(
-            hintText:
-                AppStrings.searchReports,
-
+            hintText: AppStrings.searchReports,
             hintStyle: const TextStyle(
               color: Colors.white38,
             ),
-
             prefixIcon: const Icon(
               Icons.search,
               color: Colors.greenAccent,
             ),
-
             filled: true,
-
-            fillColor:
-                const Color(0xFF11212D),
-
+            fillColor: const Color(0xFF11212D),
             border: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(18),
-
-              borderSide:
-                  BorderSide.none,
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
             ),
           ),
         ),
@@ -214,83 +184,54 @@ class _ReportsHistoryScreenState
           children: [
             Expanded(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-
                 decoration: BoxDecoration(
-                  color:
-                      const Color(0xFF11212D),
-
-                  borderRadius:
-                      BorderRadius.circular(
-                    18,
-                  ),
+                  color: const Color(0xFF11212D),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-
-                child:
-                    DropdownButtonHideUnderline(
-                  child:
-                      DropdownButton<String>(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
                     value: selectedImpact,
-
                     dropdownColor:
-                        const Color(
-                      0xFF11212D,
-                    ),
-
+                        const Color(0xFF11212D),
                     style: const TextStyle(
                       color: Colors.white,
                     ),
-
                     iconEnabledColor:
                         Colors.greenAccent,
-
                     items: [
                       DropdownMenuItem(
                         value: 'All',
-
                         child: Text(
-                          AppStrings
-                              .allImpacts,
+                          AppStrings.allImpacts,
                         ),
                       ),
-
                       DropdownMenuItem(
                         value: 'High',
-
                         child: Text(
                           AppStrings.high,
                         ),
                       ),
-
                       DropdownMenuItem(
                         value: 'Medium',
-
                         child: Text(
-                          AppStrings
-                              .medium,
+                          AppStrings.medium,
                         ),
                       ),
-
                       DropdownMenuItem(
                         value: 'Low',
-
                         child: Text(
                           AppStrings.low,
                         ),
                       ),
                     ],
-
                     onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
+                      if (value == null) return;
 
                       setState(() {
-                        selectedImpact =
-                            value;
+                        selectedImpact = value;
                       });
 
                       applyFilters();
@@ -304,67 +245,42 @@ class _ReportsHistoryScreenState
 
             Expanded(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                 ),
-
                 decoration: BoxDecoration(
-                  color:
-                      const Color(0xFF11212D),
-
-                  borderRadius:
-                      BorderRadius.circular(
-                    18,
-                  ),
+                  color: const Color(0xFF11212D),
+                  borderRadius: BorderRadius.circular(18),
                 ),
-
-                child:
-                    DropdownButtonHideUnderline(
-                  child:
-                      DropdownButton<String>(
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
                     value: selectedOrder,
-
                     dropdownColor:
-                        const Color(
-                      0xFF11212D,
-                    ),
-
+                        const Color(0xFF11212D),
                     style: const TextStyle(
                       color: Colors.white,
                     ),
-
                     iconEnabledColor:
                         Colors.greenAccent,
-
                     items: [
                       DropdownMenuItem(
                         value: 'Newest',
-
                         child: Text(
-                          AppStrings
-                              .newest,
+                          AppStrings.newest,
                         ),
                       ),
-
                       DropdownMenuItem(
                         value: 'Oldest',
-
                         child: Text(
-                          AppStrings
-                              .oldest,
+                          AppStrings.oldest,
                         ),
                       ),
                     ],
-
                     onChanged: (value) {
-                      if (value == null) {
-                        return;
-                      }
+                      if (value == null) return;
 
                       setState(() {
-                        selectedOrder =
-                            value;
+                        selectedOrder = value;
                       });
 
                       applyFilters();
@@ -382,17 +298,14 @@ class _ReportsHistoryScreenState
   Widget buildReportCard(
     Map<String, dynamic> report,
   ) {
-    final impact =
-        report['impact'] ?? '';
+    final impact = report['impact'] ?? '';
 
     return GestureDetector(
       onTap: () async {
-        final result =
-            await Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) =>
-                ReportDetailScreen(
+            builder: (_) => ReportDetailScreen(
               report: report,
             ),
           ),
@@ -402,82 +315,58 @@ class _ReportsHistoryScreenState
           loadReports();
         }
       },
-
       child: Container(
-        margin:
-            const EdgeInsets.only(
+        margin: const EdgeInsets.only(
           bottom: 18,
         ),
-
-        padding:
-            const EdgeInsets.all(
+        padding: const EdgeInsets.all(
           18,
         ),
-
         decoration: BoxDecoration(
-          color:
-              const Color(0xFF11212D),
-
-          borderRadius:
-              BorderRadius.circular(
+          color: const Color(0xFF11212D),
+          borderRadius: BorderRadius.circular(
             22,
           ),
-
           border: Border.all(
-            color: Colors.greenAccent
-                .withOpacity(
+            color: Colors.greenAccent.withOpacity(
               0.15,
             ),
           ),
-
           boxShadow: [
             BoxShadow(
-              color: Colors.black
-                  .withOpacity(
+              color: Colors.black.withOpacity(
                 0.2,
               ),
-
               blurRadius: 10,
             ),
           ],
         ),
-
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.start,
-
           children: [
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.all(
+                  padding: const EdgeInsets.all(
                     10,
                   ),
-
-                  decoration:
-                      BoxDecoration(
-                    color:
-                        getImpactColor(
+                  decoration: BoxDecoration(
+                    color: getImpactColor(
                       impact,
                     ).withOpacity(
                       0.15,
                     ),
-
                     borderRadius:
-                        BorderRadius
-                            .circular(
+                        BorderRadius.circular(
                       14,
                     ),
                   ),
-
                   child: Icon(
                     getImpactIcon(
                       impact,
                     ),
-
-                    color:
-                        getImpactColor(
+                    color: getImpactColor(
                       impact,
                     ),
                   ),
@@ -490,24 +379,15 @@ class _ReportsHistoryScreenState
                 Expanded(
                   child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
-
+                        CrossAxisAlignment.start,
                     children: [
                       Text(
-                        report['type'] ??
-                            'Unknown',
-
-                        style:
-                            const TextStyle(
-                          color:
-                              Colors.white,
-
+                        report['type'] ?? 'Unknown',
+                        style: const TextStyle(
+                          color: Colors.white,
                           fontSize: 18,
-
                           fontWeight:
-                              FontWeight
-                                  .bold,
+                              FontWeight.bold,
                         ),
                       ),
 
@@ -517,16 +397,12 @@ class _ReportsHistoryScreenState
 
                       Text(
                         impact,
-
                         style: TextStyle(
-                          color:
-                              getImpactColor(
+                          color: getImpactColor(
                             impact,
                           ),
-
                           fontWeight:
-                              FontWeight
-                                  .w600,
+                              FontWeight.w600,
                         ),
                       ),
                     ],
@@ -534,11 +410,8 @@ class _ReportsHistoryScreenState
                 ),
 
                 const Icon(
-                  Icons
-                      .arrow_forward_ios_rounded,
-
+                  Icons.arrow_forward_ios_rounded,
                   color: Colors.white38,
-
                   size: 16,
                 ),
               ],
@@ -550,32 +423,21 @@ class _ReportsHistoryScreenState
 
             Container(
               width: double.infinity,
-
-              padding:
-                  const EdgeInsets.all(
+              padding: const EdgeInsets.all(
                 16,
               ),
-
-              decoration:
-                  BoxDecoration(
-                color: Colors.white
-                    .withOpacity(
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(
                   0.03,
                 ),
-
-                borderRadius:
-                    BorderRadius.circular(
+                borderRadius: BorderRadius.circular(
                   18,
                 ),
               ),
-
               child: Text(
-                report['description'] ??
-                    '',
-
+                report['description'] ?? '',
                 style: const TextStyle(
                   color: Colors.white70,
-
                   height: 1.5,
                 ),
               ),
@@ -587,16 +449,12 @@ class _ReportsHistoryScreenState
 
             Row(
               mainAxisAlignment:
-                  MainAxisAlignment
-                      .spaceBetween,
-
+                  MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   "Tap to view details",
-
                   style: TextStyle(
                     color: Colors.white38,
-
                     fontSize: 13,
                   ),
                 ),
@@ -605,10 +463,7 @@ class _ReportsHistoryScreenState
                   children: [
                     const Icon(
                       Icons.calendar_month,
-
-                      color:
-                          Colors.white38,
-
+                      color: Colors.white38,
                       size: 16,
                     ),
 
@@ -618,17 +473,14 @@ class _ReportsHistoryScreenState
 
                     Text(
                       report['created_at']
-                                  ?.toString()
-                                  .substring(
-                                    0,
-                                    10,
-                                  ) ??
-                              '',
-
-                      style:
-                          const TextStyle(
-                        color:
-                            Colors.white38,
+                              ?.toString()
+                              .substring(
+                                0,
+                                10,
+                              ) ??
+                          '',
+                      style: const TextStyle(
+                        color: Colors.white38,
                       ),
                     ),
                   ],
@@ -641,114 +493,99 @@ class _ReportsHistoryScreenState
     );
   }
 
+  Future<void> exportPdf() async {
+    await PdfService().exportReportsPdf(
+      filteredReports,
+    );
+  }
+
+  Future<void> sharePdf() async {
+    await PdfService().shareReportsPdf(
+      filteredReports,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
           const Color(0xFF07111A),
-
       appBar: AppBar(
         backgroundColor:
             const Color(0xFF07111A),
-
         elevation: 0,
-
         title: Text(
           AppStrings.reportsHistory,
-
           style: const TextStyle(
             color: Colors.white,
-
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
-
         actions: [
           IconButton(
+            tooltip: 'Share PDF',
+            icon: const Icon(
+              Icons.share_rounded,
+              color: Colors.greenAccent,
+            ),
+            onPressed: filteredReports.isEmpty
+                ? null
+                : sharePdf,
+          ),
+          IconButton(
+            tooltip: 'Export PDF',
             icon: const Icon(
               Icons.picture_as_pdf_rounded,
-
               color: Colors.redAccent,
             ),
-
-            onPressed:
-                filteredReports.isEmpty
-                    ? null
-                    : () async {
-                        await PdfService()
-                            .exportReportsPdf(
-                          filteredReports,
-                        );
-                      },
+            onPressed: filteredReports.isEmpty
+                ? null
+                : exportPdf,
           ),
         ],
       ),
-
       body: isLoading
           ? const Center(
-              child:
-                  CircularProgressIndicator(
-                color:
-                    Colors.greenAccent,
+              child: CircularProgressIndicator(
+                color: Colors.greenAccent,
               ),
             )
           : Column(
               children: [
                 Padding(
                   padding:
-                      const EdgeInsets.all(
-                    20,
-                  ),
-
-                  child:
-                      buildSearchAndFilters(),
+                      const EdgeInsets.all(20),
+                  child: buildSearchAndFilters(),
                 ),
 
                 Expanded(
-                  child:
-                      filteredReports
-                              .isEmpty
-                          ? Center(
-                              child: Text(
-                                AppStrings
-                                    .noReportsFound,
-
-                                style:
-                                    const TextStyle(
-                                  color: Colors
-                                      .white54,
-
-                                  fontSize:
-                                      16,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                horizontal:
-                                    20,
-                              ),
-
-                              itemCount:
-                                  filteredReports
-                                      .length,
-
-                              itemBuilder:
-                                  (
-                                    context,
-                                    index,
-                                  ) {
-                                final report =
-                                    filteredReports[
-                                        index];
-
-                                return buildReportCard(
-                                  report,
-                                );
-                              },
+                  child: filteredReports.isEmpty
+                      ? Center(
+                          child: Text(
+                            AppStrings.noReportsFound,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 16,
                             ),
+                          ),
+                        )
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
+                          itemCount:
+                              filteredReports.length,
+                          itemBuilder:
+                              (context, index) {
+                            final report =
+                                filteredReports[index];
+
+                            return buildReportCard(
+                              report,
+                            );
+                          },
+                        ),
                 ),
               ],
             ),
